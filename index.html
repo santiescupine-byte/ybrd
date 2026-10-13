@@ -239,10 +239,23 @@ const db = {
     if(rows.length){ const {error}=await sb.from('ybrd_formula_insumos').insert(rows); if(error) throw error; }
     return id;
   },
+  // ---- presentaciones (gramos + empaques por unidad) ----
+  async listPresentaciones(){ const {data,error}=await sb.from('ybrd_presentaciones').select('*, ybrd_presentacion_empaques(insumo_id,cantidad)').order('gramos'); if(error) throw error; return (data||[]).map(p=>({...p,empaques:p.ybrd_presentacion_empaques||[]})); },
+  async savePresentacion(p, empaques){
+    const row={nombre:p.nombre.trim(),gramos:Number(p.gramos)||0,activa:p.activa!==false};
+    let id=p.id;
+    if(id){ const {error}=await sb.from('ybrd_presentaciones').update(row).eq('id',id); if(error) throw error; }
+    else { const {data,error}=await sb.from('ybrd_presentaciones').insert(row).select('id').single(); if(error) throw error; id=data.id; }
+    await sb.from('ybrd_presentacion_empaques').delete().eq('presentacion_id',id);
+    const rows=empaques.filter(e=>e.insumo_id && Number(e.cantidad)>0).map(e=>({presentacion_id:id,insumo_id:e.insumo_id,cantidad:Number(e.cantidad)}));
+    if(rows.length){ const {error}=await sb.from('ybrd_presentacion_empaques').insert(rows); if(error) throw error; }
+    return id;
+  },
+  async producirFormula(formulaId, kg, pedidoId, operador, nota){ const {data,error}=await sb.rpc('ybrd_producir_formula',{p_formula_id:formulaId,p_kg:Number(kg),p_pedido_id:pedidoId||null,p_operador:operador||null,p_nota:nota||null}); if(error) throw error; return data; },
   // ---- pedidos ----
   async listPedidos(){ const {data,error}=await sb.from('ybrd_pedidos_v').select('*').order('created_at',{ascending:false}).limit(500); if(error) throw error; return data||[]; },
   async savePedido(p){
-    const row={cliente_id:p.cliente_id,formula_id:p.formula_id||null,presentacion_g:Number(p.presentacion_g)||0,unidades:Number(p.unidades)||0,precio_unidad:Number(p.precio_unidad)||0,descuento:Number(p.descuento)||0,
+    const row={cliente_id:p.cliente_id,formula_id:p.formula_id||null,presentacion_id:p.presentacion_id||null,presentacion_g:Number(p.presentacion_g)||0,unidades:Number(p.unidades)||0,precio_unidad:Number(p.precio_unidad)||0,descuento:Number(p.descuento)||0,
       fecha_entrega:p.fecha_entrega||null,nota:(p.nota||'').trim()||null,etiqueta:(p.etiqueta||'').trim()||null};
     if(p.id){ const {error}=await sb.from('ybrd_pedidos').update(row).eq('id',p.id); if(error) throw error; }
     else { const {error}=await sb.from('ybrd_pedidos').insert(row); if(error) throw error; }
@@ -250,7 +263,7 @@ const db = {
   async setEstado(id, estado){ const row={estado}; if(estado==='entregado') row.entregado_en=new Date().toISOString(); const {error}=await sb.from('ybrd_pedidos').update(row).eq('id',id); if(error) throw error; },
   async producir(pedidoId, kg, operador, nota){ const {data,error}=await sb.rpc('ybrd_producir',{p_pedido_id:pedidoId,p_kg:Number(kg),p_operador:operador||null,p_nota:nota||null}); if(error) throw error; return data; },
   async envasar(pedidoId, unidades, empaques, produccionId, operador, nota){ const {data,error}=await sb.rpc('ybrd_envasar',{p_pedido_id:pedidoId,p_unidades:Number(unidades),p_empaques:empaques,p_produccion_id:produccionId||null,p_operador:operador||null,p_nota:nota||null}); if(error) throw error; return data; },
-  async listProducciones(){ const {data,error}=await sb.from('ybrd_producciones').select('*, ybrd_pedidos(numero,cliente_id,presentacion_g,unidades)').order('created_at',{ascending:false}).limit(300); if(error) throw error; return data||[]; },
+  async listProducciones(){ const {data,error}=await sb.from('ybrd_producciones').select('*, ybrd_pedidos(numero,cliente_id,presentacion_g,unidades), ybrd_formulas(nombre)').order('created_at',{ascending:false}).limit(300); if(error) throw error; return data||[]; },
   async produccionInsumos(id){ const {data,error}=await sb.from('ybrd_produccion_insumos').select('*').eq('produccion_id',id).order('costo',{ascending:false}); if(error) return []; return data||[]; },
   async detallePedido(id){
     const [pr,en,pa,re]=await Promise.all([
@@ -315,7 +328,7 @@ function App(){
     );
   }
 
-  const NAV=[["pedidos","📋","Pedidos"],["clientes","💈","Clientes"],["formulas","🧪","Fórmulas"],["produccion","🏭","Producción"],["cobros","💰","Cobros"],["insumos","📦","Insumos"]];
+  const NAV=[["pedidos","📋","Pedidos"],["clientes","💈","Clientes"],["formulas","🧪","Fórmulas"],["presentaciones","📐","Presentaciones"],["produccion","🏭","Producción"],["cobros","💰","Cobros"],["insumos","📦","Insumos"]];
   const actual=NAV.find(n=>n[0]===tab)||NAV[0];
   return (
     <div className="app" style={{maxWidth:1100}}>
@@ -335,7 +348,8 @@ function App(){
             {tab==="pedidos"    && <Pedidos showToast={showToast} quien={auth.nombre}/>}
             {tab==="clientes"   && <Clientes showToast={showToast}/>}
             {tab==="formulas"   && <Formulas showToast={showToast}/>}
-            {tab==="produccion" && <Produccion showToast={showToast}/>}
+            {tab==="presentaciones" && <Presentaciones showToast={showToast}/>}
+            {tab==="produccion" && <Produccion showToast={showToast} quien={auth.nombre}/>}
             {tab==="cobros"     && <Cobros showToast={showToast}/>}
             {tab==="insumos"    && <Insumos showToast={showToast}/>}
           </div>
@@ -408,6 +422,7 @@ function Clientes({showToast}){
 // ============================================================
 // FÓRMULAS (ingredientes en % de peso, desde los insumos de Panzer)
 // ============================================================
+function costoEmpaque(pres, insumos){ if(!pres) return 0; return (pres.empaques||[]).reduce((a,e)=>{ const ins=insumos.find(i=>i.id===e.insumo_id); return a+(ins?(Number(ins.costo)||0)*Number(e.cantidad||0):0); },0); }
 function costoKg(items, insumos){ return items.reduce((a,it)=>{ const ins=insumos.find(i=>i.id===it.insumo_id); if(!ins) return a; return a+(Number(ins.costo)||0)*consumoDe(ins,it.pct,1); },0); }
 
 function Formulas({showToast}){
@@ -498,6 +513,82 @@ function FormulaEditor({f, insumos, clientes, onClose, onSaved, showToast}){
 }
 
 // ============================================================
+// PRESENTACIONES: gramos por unidad + empaques (frasco, tapa, etiqueta...) → costo por unidad
+// ============================================================
+function Presentaciones({showToast}){
+  const [rows,setRows]=useState(null);
+  const [insumos,setInsumos]=useState([]);
+  const [formulas,setFormulas]=useState([]);
+  const [editing,setEditing]=useState(null);
+  const [fRef,setFRef]=useState("");    // fórmula de referencia para ver el costo total por unidad
+  const load=async()=>{ try{ const [p,i,f]=await Promise.all([db.listPresentaciones(),db.listInsumos(),db.listFormulas()]); setRows(p); setInsumos(i); setFormulas(f); if(!fRef&&f.length) setFRef(f[0].id); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  useEffect(()=>{ load(); },[]);
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const empaques=insumos.filter(i=>i.tipo==='empaque');
+  const fr=formulas.find(f=>f.id===fRef); const ckg=fr?costoKg(fr.items,insumos):0;
+  const nombreIns=id=>{ const i=insumos.find(x=>x.id===id); return i?i.nombre:"?"; };
+  return (
+    <div>
+      <div className="card" style={{background:"var(--amber-d)",marginBottom:12}}><span className="muted">Una presentación es el envase que le entregas al cliente: los gramos de cera por unidad y los empaques que lleva cada unidad. Con eso el sistema calcula el costo total por unidad (cera + empaque) y lo usa en los pedidos.</span></div>
+      <div className="toolbar">
+        <div className="muted">Costo de cera según</div>
+        <select className="select" value={fRef} onChange={e=>setFRef(e.target.value)}>{formulas.map(f=><option key={f.id} value={f.id}>{f.nombre} · {fmt(costoKg(f.items,insumos))}/kg</option>)}</select>
+        <button className="btn btn-amber" style={{marginLeft:"auto"}} onClick={()=>setEditing({nombre:"",gramos:100,activa:true,empaques:[{insumo_id:"",cantidad:1}]})}>+ Nueva presentación</button>
+      </div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Presentación</th><th className="num">Gramos</th><th>Empaques por unidad</th><th className="num">Empaque</th><th className="num">Cera</th><th className="num">Costo / unidad</th><th></th></tr></thead>
+          <tbody>
+            {rows.length===0 && <tr><td colSpan="7"><div className="empty">Sin presentaciones. Crea la primera, por ejemplo "Lata 100 g".</div></td></tr>}
+            {rows.map(p=>{ const ce=costoEmpaque(p,insumos), cc=ckg*Number(p.gramos)/1000; return (
+              <tr key={p.id} className={p.activa?"":"inactive"}>
+                <td className="row-name">{p.nombre}</td>
+                <td className="num">{num(p.gramos,0)} g</td>
+                <td style={{fontSize:12}}>{p.empaques.length?p.empaques.map(e=>(Number(e.cantidad)!==1?num(e.cantidad,2)+" × ":"")+nombreIns(e.insumo_id)).join(", "):<span className="muted">sin empaques</span>}</td>
+                <td className="num">{fmt(ce)}</td>
+                <td className="num">{fmt(cc)}</td>
+                <td className="num" style={{fontWeight:800,color:"var(--tb)"}}>{fmt(ce+cc)}</td>
+                <td><div className="actions"><button className="btn btn-ghost btn-sm" onClick={()=>setEditing({...p,empaques:p.empaques.map(e=>({...e}))})}>Editar</button></div></td>
+              </tr>); })}
+          </tbody>
+        </table>
+      </div>
+      {editing && (
+        <div className="modal-bg" onClick={()=>setEditing(null)}>
+          <div className="modal" style={{maxWidth:620}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-t">{editing.id?"Editar presentación":"Nueva presentación"}</div>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:2}}><label className="label">Nombre</label><input className="input" placeholder="Ej: Lata 100 g" value={editing.nombre} onChange={e=>setEditing({...editing,nombre:e.target.value})}/></div>
+              <div style={{flex:1}}><label className="label">Gramos por unidad</label><input className="input" type="number" value={editing.gramos} onChange={e=>setEditing({...editing,gramos:e.target.value})}/></div>
+            </div>
+            <label className="label">Empaques por unidad</label>
+            {editing.empaques.map((e,k)=>{ const ins=empaques.find(i=>i.id===e.insumo_id); return (
+              <div key={k} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+                <select className="select" style={{margin:0,flex:3}} value={e.insumo_id} onChange={ev=>setEditing(x=>({...x,empaques:x.empaques.map((y,j)=>j===k?{...y,insumo_id:ev.target.value}:y)}))}>
+                  <option value="">— Empaque —</option>{empaques.map(i=><option key={i.id} value={i.id}>{i.nombre} · {fmt(i.costo)}</option>)}
+                </select>
+                <input className="input" style={{margin:0,width:80,textAlign:"right"}} type="number" step="0.01" value={e.cantidad} onChange={ev=>setEditing(x=>({...x,empaques:x.empaques.map((y,j)=>j===k?{...y,cantidad:ev.target.value}:y)}))}/>
+                <span className="muted" style={{width:80,textAlign:"right"}}>{ins?fmt((Number(ins.costo)||0)*Number(e.cantidad||0)):""}</span>
+                <button className="btn btn-danger btn-sm" onClick={()=>setEditing(x=>({...x,empaques:x.empaques.filter((_,j)=>j!==k)}))}>✕</button>
+              </div>); })}
+            <button className="btn btn-ghost btn-sm" onClick={()=>setEditing(x=>({...x,empaques:[...x.empaques,{insumo_id:"",cantidad:1}]}))}>+ Empaque</button>
+            <div style={{display:"flex",gap:14,marginTop:14,padding:"10px 12px",borderRadius:10,background:"var(--sf2)"}}>
+              <div><div className="muted">Empaque / unidad</div><div style={{fontWeight:800}}>{fmt(costoEmpaque(editing,insumos))}</div></div>
+              <div><div className="muted">Cera / unidad ({fr?fr.nombre:"—"})</div><div style={{fontWeight:800}}>{fmt(ckg*(Number(editing.gramos)||0)/1000)}</div></div>
+              <div><div className="muted">Costo total / unidad</div><div style={{fontWeight:800,color:"var(--tb)"}}>{fmt(costoEmpaque(editing,insumos)+ckg*(Number(editing.gramos)||0)/1000)}</div></div>
+            </div>
+            <label className="check"><input type="checkbox" checked={editing.activa!==false} onChange={e=>setEditing({...editing,activa:e.target.checked})}/> Activa</label>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={()=>setEditing(null)}>Cancelar</button>
+              <button className="btn btn-amber" disabled={!editing.nombre.trim()||!(Number(editing.gramos)>0)} onClick={async()=>{ try{ await db.savePresentacion(editing,editing.empaques); setEditing(null); await load(); showToast("Presentación guardada ✓"); }catch(e){ showToast(""+(e.message||e),"err"); } }}>Guardar</button>
+            </div>
+          </div>
+        </div>)}
+    </div>
+  );
+}
+
+// ============================================================
 // PEDIDOS (el centro de todo: crear → producir → envasar → entregar → cobrar)
 // ============================================================
 function Pedidos({showToast, quien}){
@@ -505,16 +596,20 @@ function Pedidos({showToast, quien}){
   const [clientes,setClientes]=useState([]);
   const [formulas,setFormulas]=useState([]);
   const [insumos,setInsumos]=useState([]);
+  const [presentaciones,setPresentaciones]=useState([]);
   const [filtro,setFiltro]=useState('abiertos');
   const [editing,setEditing]=useState(null);
   const [ver,setVer]=useState(null);
-  const load=async()=>{ try{ const [p,c,f,i]=await Promise.all([db.listPedidos(),db.listClientes(),db.listFormulas(),db.listInsumos()]); setRows(p); setClientes(c); setFormulas(f); setInsumos(i); if(ver){ const n=p.find(x=>x.id===ver.id); if(n) setVer(n); } }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  const load=async()=>{ try{ const [p,c,f,i,pr]=await Promise.all([db.listPedidos(),db.listClientes(),db.listFormulas(),db.listInsumos(),db.listPresentaciones().catch(()=>[])]); setRows(p); setClientes(c); setFormulas(f); setInsumos(i); setPresentaciones(pr); if(ver){ const n=p.find(x=>x.id===ver.id); if(n) setVer(n); } }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
   useEffect(()=>{ load(); },[]);
   if(!rows) return <div className="empty">Cargando…</div>;
   const vis=rows.filter(p=>filtro==='todos'?true:filtro==='abiertos'?!['entregado','cancelado'].includes(p.estado):p.estado===filtro);
   const abiertos=rows.filter(p=>!['entregado','cancelado'].includes(p.estado));
   const saldoTotal=rows.filter(p=>p.estado!=='cancelado').reduce((a,p)=>a+Math.max(0,Number(p.total)-Number(p.pagado)),0);
-  const nuevo=()=>setEditing({cliente_id:(clientes[0]||{}).id||"",formula_id:"",presentacion_g:100,unidades:12,precio_unidad:0,descuento:0,fecha_entrega:"",nota:"",etiqueta:""});
+  const presActivas=presentaciones.filter(p=>p.activa);
+  const nuevo=()=>{ const pr=presActivas[0]; setEditing({cliente_id:(clientes[0]||{}).id||"",formula_id:"",presentacion_id:pr?pr.id:"",presentacion_g:pr?pr.gramos:100,unidades:12,precio_unidad:0,descuento:0,fecha_entrega:"",nota:"",etiqueta:""}); };
+  // costo estimado por unidad = cera (fórmula × gramos) + empaque (presentación)
+  const costoUnidadEst=e=>{ const f=formulas.find(x=>x.id===e.formula_id); const pr=presentaciones.find(x=>x.id===e.presentacion_id); return (f?costoKg(f.items,insumos)*(Number(e.presentacion_g)||0)/1000:0)+costoEmpaque(pr,insumos); };
   const guardar=async()=>{ if(!editing.cliente_id||!(Number(editing.unidades)>0)||!(Number(editing.presentacion_g)>0)) return; try{ await db.savePedido(editing); setEditing(null); await load(); showToast("Pedido guardado ✓"); }catch(e){ showToast(""+(e.message||e),"err"); } };
   const formulasDe=cid=>formulas.filter(f=>f.activa && (!f.cliente_id || f.cliente_id===cid));
   return (
@@ -567,10 +662,23 @@ function Pedidos({showToast, quien}){
               {formulasDe(editing.cliente_id).map(f=><option key={f.id} value={f.id}>{f.nombre}{f.cliente_id?" (propia)":""}</option>)}
             </select>
             <div style={{display:"flex",gap:10}}>
-              <div style={{flex:1}}><label className="label">Presentación (g)</label><input className="input" type="number" value={editing.presentacion_g} onChange={e=>setEditing({...editing,presentacion_g:e.target.value})}/></div>
+              <div style={{flex:1.4}}><label className="label">Presentación</label>
+                {presActivas.length>0
+                  ? <select className="select" value={editing.presentacion_id||""} onChange={e=>{ const pr=presentaciones.find(x=>x.id===e.target.value); setEditing({...editing,presentacion_id:e.target.value,presentacion_g:pr?pr.gramos:editing.presentacion_g}); }}>
+                      <option value="">— Gramos a mano —</option>{presActivas.map(pr=><option key={pr.id} value={pr.id}>{pr.nombre} ({num(pr.gramos,0)} g)</option>)}
+                    </select>
+                  : <input className="input" type="number" placeholder="gramos" value={editing.presentacion_g} onChange={e=>setEditing({...editing,presentacion_g:e.target.value})}/>}
+                {presActivas.length>0 && !editing.presentacion_id && <input className="input" type="number" placeholder="gramos por unidad" value={editing.presentacion_g} onChange={e=>setEditing({...editing,presentacion_g:e.target.value})}/>}
+              </div>
               <div style={{flex:1}}><label className="label">Unidades</label><input className="input" type="number" value={editing.unidades} onChange={e=>setEditing({...editing,unidades:e.target.value})}/></div>
               <div style={{flex:1}}><label className="label">Precio por unidad</label><input className="input" type="number" value={editing.precio_unidad} onChange={e=>setEditing({...editing,precio_unidad:e.target.value})}/></div>
             </div>
+            {(()=>{ const cu=costoUnidadEst(editing), pu=Number(editing.precio_unidad)||0; return (
+              <div style={{display:"flex",gap:14,padding:"8px 12px",borderRadius:10,background:"var(--sf2)",marginBottom:10,fontSize:13}}>
+                <div><div className="muted">Costo estimado / unidad</div><div style={{fontWeight:800}}>{fmt(cu)}</div></div>
+                <div><div className="muted">Margen</div><div style={{fontWeight:800,color:pu>cu?"var(--green)":"var(--red)"}}>{pu>0?Math.round((pu-cu)/pu*100)+"%":"—"}</div></div>
+                <div><div className="muted">Ganancia del pedido</div><div style={{fontWeight:800}}>{fmt((pu-cu)*(Number(editing.unidades)||0)-(Number(editing.descuento)||0))}</div></div>
+              </div>); })()}
             <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
               <div style={{flex:1}}><label className="label">Descuento ($)</label><input className="input" type="number" value={editing.descuento||0} onChange={e=>setEditing({...editing,descuento:e.target.value})}/></div>
               <div style={{flex:2,paddingBottom:14}} className="muted">Subtotal {fmt((Number(editing.unidades)||0)*(Number(editing.precio_unidad)||0))}{Number(editing.descuento)>0?(" − "+fmt(editing.descuento)):""} = <b style={{color:"var(--tb)"}}>Total {fmt((Number(editing.unidades)||0)*(Number(editing.precio_unidad)||0)-(Number(editing.descuento)||0))}</b><br/>producto: {num((Number(editing.unidades)||0)*(Number(editing.presentacion_g)||0)/1000,2)} kg</div>
@@ -588,12 +696,12 @@ function Pedidos({showToast, quien}){
           </div>
         </div>)}
 
-      {ver && <PedidoDetalle p={ver} formulas={formulas} insumos={insumos} quien={quien} showToast={showToast} onClose={()=>setVer(null)} onChange={load} onEditar={()=>{ setEditing({...ver}); setVer(null); }}/>}
+      {ver && <PedidoDetalle p={ver} formulas={formulas} insumos={insumos} presentacion={presentaciones.find(x=>x.id===ver.presentacion_id)} quien={quien} showToast={showToast} onClose={()=>setVer(null)} onChange={load} onEditar={()=>{ setEditing({...ver}); setVer(null); }}/>}
     </div>
   );
 }
 
-function PedidoDetalle({p, formulas, insumos, quien, showToast, onClose, onChange, onEditar}){
+function PedidoDetalle({p, formulas, insumos, presentacion, quien, showToast, onClose, onChange, onEditar}){
   const [det,setDet]=useState(null);
   const [modo,setModo]=useState(null);   // 'producir' | 'envasar' | 'pago' | 'remision'
   const [imprimir,setImprimir]=useState(null);   // remisión a mostrar/imprimir
@@ -619,7 +727,7 @@ function PedidoDetalle({p, formulas, insumos, quien, showToast, onClose, onChang
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:14,marginBottom:10}}>
           <div><span className="muted">Cliente</span><br/><b>{p.cliente_marca||p.cliente_nombre}</b>{p.cliente_marca && <span className="muted"> · {p.cliente_nombre}</span>}</div>
           <div><span className="muted">Fórmula</span><br/><b>{p.formula_nombre||"—"}</b></div>
-          <div><span className="muted">Pedido</span><br/><b>{p.unidades} × {num(p.presentacion_g,0)} g</b> = {num(kgNecesarios,2)} kg</div>
+          <div><span className="muted">Pedido</span><br/><b>{p.unidades} × {p.presentacion_nombre?(p.presentacion_nombre+" ("+num(p.presentacion_g,0)+" g)"):(num(p.presentacion_g,0)+" g")}</b> = {num(kgNecesarios,2)} kg</div>
           <div><span className="muted">Entrega</span><br/><b>{p.fecha_entrega||"—"}</b></div>
           <div><span className="muted">Total</span><br/><b>{fmt(p.total)}</b> <span className="muted">({fmt(p.precio_unidad)} c/u{Number(p.descuento)>0?(" · desc. "+fmt(p.descuento)):""})</span></div>
           <div><span className="muted">Saldo</span><br/><b style={{color:saldo>0?"var(--red)":"var(--green)"}}>{saldo>0?fmt(saldo):"Pagado"}</b></div>
@@ -668,7 +776,7 @@ function PedidoDetalle({p, formulas, insumos, quien, showToast, onClose, onChang
         <div className="modal-actions"><button className="btn btn-ghost" onClick={onClose}>Cerrar</button></div>
 
         {modo==='producir' && <ProducirModal p={p} f={f} insumos={insumos} kgSugeridos={kgNecesarios} quien={quien} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
-        {modo==='envasar' && <EnvasarModal p={p} insumos={insumos} producciones={(det||{}).producciones||[]} quien={quien} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
+        {modo==='envasar' && <EnvasarModal p={p} insumos={insumos} presentacion={presentacion} producciones={(det||{}).producciones||[]} quien={quien} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
         {modo==='pago' && <PagoModal p={p} saldo={saldo} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
         {modo==='remision' && <RemisionModal p={p} pendientes={Math.max(0,Number(p.unidades)-unidadesRemitidas)} showToast={showToast} onClose={()=>setModo(null)} onDone={async(r)=>{ setModo(null); await cargar(); await onChange(); setImprimir(r); }}/>}
         {imprimir && <RemisionVista r={imprimir} p={p} onClose={()=>setImprimir(null)}/>}
@@ -724,10 +832,10 @@ function ProducirModal({p, f, insumos, kgSugeridos, quien, showToast, onClose, o
   );
 }
 
-function EnvasarModal({p, insumos, producciones, quien, showToast, onClose, onDone}){
+function EnvasarModal({p, insumos, presentacion, producciones, quien, showToast, onClose, onDone}){
   const empaques=insumos.filter(i=>i.tipo==='empaque');
   const [unidades,setUnidades]=useState(String(Math.max(0,Number(p.unidades)-Number(p.unidades_envasadas||0))||p.unidades));
-  const [items,setItems]=useState([{insumo_id:"",por_unidad:1}]);
+  const [items,setItems]=useState(()=>presentacion&&presentacion.empaques.length?presentacion.empaques.map(e=>({insumo_id:e.insumo_id,por_unidad:e.cantidad})):[{insumo_id:"",por_unidad:1}]);
   const [prodId,setProdId]=useState((producciones[producciones.length-1]||{}).id||"");
   const [nota,setNota]=useState("");
   const [busy,setBusy]=useState(false);
@@ -896,18 +1004,67 @@ function PagoModal({p, saldo, showToast, onClose, onDone}){
 // ============================================================
 // PRODUCCIÓN (historial de lotes con su consumo)
 // ============================================================
-function Produccion({showToast}){
+function Produccion({showToast, quien}){
   const [rows,setRows]=useState(null);
   const [clientes,setClientes]=useState([]);
+  const [formulas,setFormulas]=useState([]);
+  const [insumos,setInsumos]=useState([]);
+  const [pedidos,setPedidos]=useState([]);
   const [abierto,setAbierto]=useState(null);
   const [det,setDet]=useState({});
-  useEffect(()=>{ (async()=>{ try{ const [p,c]=await Promise.all([db.listProducciones(),db.listClientes()]); setRows(p); setClientes(c); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } })(); },[]);
+  // producir desde aquí: fórmula + kilos → consumo de cada insumo
+  const [fId,setFId]=useState("");
+  const [kg,setKg]=useState("1");
+  const [pedId,setPedId]=useState("");
+  const [nota,setNota]=useState("");
+  const [busy,setBusy]=useState(false);
+  const load=async()=>{ try{ const [p,c,f,i,pe]=await Promise.all([db.listProducciones(),db.listClientes(),db.listFormulas(),db.listInsumos(),db.listPedidos()]); setRows(p); setClientes(c); setFormulas(f.filter(x=>x.activa)); setInsumos(i); setPedidos(pe.filter(x=>!['entregado','cancelado'].includes(x.estado))); if(!fId&&f.length) setFId(f[0].id); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  useEffect(()=>{ load(); },[]);
   if(!rows) return <div className="empty">Cargando…</div>;
   const cli=id=>{ const c=clientes.find(x=>x.id===id); return c?(c.marca||c.nombre):"—"; };
+  const f=formulas.find(x=>x.id===fId);
+  const ped=pedidos.find(x=>x.id===pedId);
+  const calc=f?f.items.map(it=>{ const ins=insumos.find(i=>i.id===it.insumo_id)||{nombre:"?",unidad:"",costo:0,stock:0}; const cant=consumoDe(ins,it.pct,kg); return {...it,ins,cant,costo:(Number(ins.costo)||0)*cant,falta:Number(ins.stock)<cant}; }):[];
+  const costoLote=calc.reduce((a,i)=>a+i.costo,0);
+  const producir=async()=>{ if(busy||!f||!(Number(kg)>0)) return; if(!confirm("¿Producir "+num(kg,3)+" kg de "+f.nombre+"? Se descuentan los insumos.")) return; setBusy(true);
+    try{ const r=await db.producirFormula(f.id,kg,pedId||null,quien,nota); if(r&&r.ok){ showToast("Lote producido: "+fmt(r.costo)+" ✓"); setNota(""); await load(); } else showToast((r&&r.error)||"No se pudo producir","err"); }
+    catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
   const abrir=async(id)=>{ if(abierto===id){ setAbierto(null); return; } setAbierto(id); if(!det[id]){ const d=await db.produccionInsumos(id); setDet(x=>({...x,[id]:d})); } };
   const totKg=rows.reduce((a,r)=>a+Number(r.kg),0), totCosto=rows.reduce((a,r)=>a+Number(r.costo_total),0);
   return (
     <div>
+      <div className="card" style={{marginBottom:12}}>
+        <div className="sec-title" style={{fontSize:15,marginBottom:8}}>🏭 Producir</div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <div style={{flex:"2 1 220px"}}><label className="label">Fórmula</label>
+            <select className="select" value={fId} onChange={e=>setFId(e.target.value)}>{formulas.map(x=><option key={x.id} value={x.id}>{x.nombre}{x.cliente_id?" · "+cli(x.cliente_id):""}</option>)}</select></div>
+          <div style={{flex:"1 1 120px"}}><label className="label">Kilos a fabricar</label><input className="input" type="number" step="0.001" value={kg} onChange={e=>setKg(e.target.value)}/></div>
+          <div style={{flex:"2 1 220px"}}><label className="label">Para el pedido (opcional)</label>
+            <select className="select" value={pedId} onChange={e=>{ setPedId(e.target.value); const pp=pedidos.find(x=>x.id===e.target.value); if(pp){ if(pp.formula_id) setFId(pp.formula_id); setKg(String(Math.round(Number(pp.unidades)*Number(pp.presentacion_g)/1000*1.05*1000)/1000)); } }}>
+              <option value="">Lote libre (sin pedido)</option>{pedidos.map(x=><option key={x.id} value={x.id}>#{x.numero} · {x.cliente_marca||x.cliente_nombre} · {x.unidades} × {num(x.presentacion_g,0)} g</option>)}
+            </select></div>
+        </div>
+        {f ? (<div>
+          <div className="card" style={{padding:0,overflowX:"auto"}}>
+            <table className="tbl">
+              <thead><tr><th>Insumo</th><th className="num">%</th><th className="num">Cantidad</th><th className="num">Stock</th><th className="num">Costo</th></tr></thead>
+              <tbody>{calc.map((i,k)=>(<tr key={k} style={{background:i.falta?"var(--red-d)":undefined}}>
+                <td className="row-name">{i.ins.nombre}</td><td className="num">{num(i.pct,2)}%</td>
+                <td className="num" style={{fontWeight:800,color:"var(--tb)"}}>{num(i.cant,i.ins.unidad==='g'?0:3)} {i.ins.unidad}</td>
+                <td className="num" style={{color:i.falta?"var(--red)":"var(--td)"}}>{num(i.ins.stock,i.ins.unidad==='g'?0:2)}{i.falta?" ⚠":""}</td>
+                <td className="num">{fmt(i.costo)}</td></tr>))}</tbody>
+            </table>
+          </div>
+          <div style={{display:"flex",gap:14,marginTop:10,padding:"10px 12px",borderRadius:10,background:"var(--sf2)",alignItems:"center",flexWrap:"wrap"}}>
+            <div><div className="muted">Costo del lote</div><div style={{fontWeight:800,color:"var(--tb)"}}>{fmt(costoLote)}</div></div>
+            <div><div className="muted">Costo por kilo</div><div style={{fontWeight:800}}>{fmt(Number(kg)>0?costoLote/Number(kg):0)}</div></div>
+            {ped && <div><div className="muted">Por unidad del pedido</div><div style={{fontWeight:800}}>{fmt(Number(ped.unidades)>0?costoLote/Number(ped.unidades):0)}</div></div>}
+            <input className="input" style={{margin:0,flex:"1 1 160px"}} placeholder="Nota del lote (opcional)" value={nota} onChange={e=>setNota(e.target.value)}/>
+            <button className="btn btn-amber" disabled={busy||!(Number(kg)>0)} onClick={producir}>{busy?"Produciendo…":"Producir y descontar insumos"}</button>
+          </div>
+          {calc.some(i=>i.falta) && <div className="muted" style={{marginTop:6,color:"var(--red)"}}>⚠ Hay insumos sin stock suficiente. Se puede producir igual (el stock queda negativo), pero conviene ingresar la compra en el admin de Panzer.</div>}
+        </div>) : <div className="muted">Crea una fórmula en 🧪 Fórmulas para poder producir.</div>}
+      </div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}}>
         <div className="card kpi"><div className="muted">Lotes</div><div className="v">{rows.length}</div></div>
         <div className="card kpi"><div className="muted">Kilos producidos</div><div className="v" style={{color:"var(--amber)"}}>{num(totKg,1)}</div></div>
@@ -921,8 +1078,8 @@ function Produccion({showToast}){
             {rows.map(r=>(<React.Fragment key={r.id}>
               <tr style={{cursor:"pointer"}} onClick={()=>abrir(r.id)}>
                 <td className="muted" style={{whiteSpace:"nowrap"}}>{fLocalDia(r.created_at)} {fLocalHora(r.created_at)}</td>
-                <td>#{(r.ybrd_pedidos||{}).numero}</td>
-                <td className="row-name">{cli((r.ybrd_pedidos||{}).cliente_id)}</td>
+                <td>{r.pedido_id?("#"+(r.ybrd_pedidos||{}).numero):<span className="muted">libre</span>}</td>
+                <td className="row-name">{r.pedido_id?cli((r.ybrd_pedidos||{}).cliente_id):(r.ybrd_formulas||{}).nombre||"—"}</td>
                 <td className="num">{num(r.kg,2)}</td>
                 <td className="num" style={{fontWeight:700}}>{fmt(r.costo_total)}</td>
                 <td className="num">{fmt(Number(r.kg)>0?Number(r.costo_total)/Number(r.kg):0)}</td>
