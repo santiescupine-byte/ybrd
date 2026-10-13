@@ -1,0 +1,9 @@
+# Repo publico (GitHub Pages). Solo se sube la app; el SQL se queda en el PC.
+*
+!.gitignore
+!index.html
+!logo-blanco.png
+!logo-negro.png
+!icon-192.png
+!icon-512.png
+!manifest.json

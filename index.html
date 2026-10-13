@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YBRD — Your Brand</title>
+  <meta name="theme-color" content="#0f0e0c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="YBRD">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+  <style>
+    :root{
+      /* TEMA CLARO (azules / blancos, acento azul del logo) */
+      --bg:#eaf0f9;--sf:#ffffff;--sf2:#eef4fb;--sf3:#e1eaf7;
+      --bd:#d9e2f0;--bd2:#c5d3e9;
+      --amber:#2563eb;--amber-d:rgba(37,99,235,0.10);
+      --blue:#2563eb;--blue-d:rgba(37,99,235,0.12);
+      --green:#059669;--green-d:rgba(5,150,105,0.10);
+      --red:#dc2626;--red-d:rgba(220,38,38,0.10);
+      --purple:#7c3aed;
+      --t:#334155;--td:#64748b;--tb:#0f172a;
+      --font:'Outfit',system-ui,sans-serif;--r:14px;
+      --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{background:var(--bg);font-family:var(--font);color:var(--t);}
+    input,select,button,textarea{font-family:inherit;}
+    input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;}
+    input[type="number"]{-moz-appearance:textfield;}
+    ::selection{background:rgba(37,99,235,0.18);}
+    #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s;}
+    #loading.hide{opacity:0;pointer-events:none;}
+    .loader{width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .app{max-width:1000px;margin:0 auto;min-height:100vh;}
+    .header{background:linear-gradient(135deg,var(--sf),var(--sf2));border-bottom:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;}
+    .header img{height:28px;}
+    .header h1{font-size:17px;font-weight:800;color:var(--tb);}
+    .header-sub{font-size:11px;color:var(--td);}
+    .header-badge{margin-left:auto;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:800;background:var(--amber-d);color:var(--amber);letter-spacing:.5px;}
+    .demo-banner{background:var(--amber-d);border-bottom:1px solid rgba(37,99,235,.25);color:var(--amber);font-size:11px;font-weight:600;text-align:center;padding:6px;}
+    /* Layout con barra lateral */
+    .layout{display:flex;align-items:flex-start;}
+    .sidebar{width:210px;flex-shrink:0;background:linear-gradient(180deg,var(--sf),var(--sf2));border-right:1px solid var(--bd);padding:14px 10px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:thin;}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:4px 8px 12px;border-bottom:1px solid var(--bd);margin-bottom:8px;}
+    .sidebar-logo img{height:26px;}
+    .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--td);cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:background .12s;}
+    .nav-item:hover{background:var(--sf2);color:var(--t);}
+    .nav-item.active{background:var(--amber-d);color:var(--amber);border-color:rgba(37,99,235,.25);font-weight:800;}
+    .nav-ico{width:20px;text-align:center;font-size:16px;flex-shrink:0;}
+    .main{flex:1;min-width:0;}
+    .topbar{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:40;}
+    .hamburger{display:none;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;width:42px;height:40px;color:var(--t);font-size:18px;cursor:pointer;flex-shrink:0;}
+    .nav-overlay{display:none;}
+    .page{padding:20px;}
+    @media(max-width:820px){
+      .app{max-width:100%;}
+      .sidebar{position:fixed;left:0;top:0;height:100vh;z-index:100;transform:translateX(-105%);transition:transform .25s ease;box-shadow:0 0 30px rgba(0,0,0,.5);}
+      .sidebar.open{transform:translateX(0);}
+      .hamburger{display:block;}
+      .nav-overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;}
+    }
+    .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+    .toolbar .input{margin-bottom:0;flex:1;min-width:160px;}
+    .toolbar .select{margin-bottom:0;width:auto;min-width:140px;}
+    .card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:12px;box-shadow:var(--shadow);}
+    .label{font-size:12px;font-weight:600;color:var(--td);margin-bottom:6px;display:block;letter-spacing:.3px;}
+    .input,.select,.textarea{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;color:var(--tb);font-size:14px;outline:none;margin-bottom:12px;}
+    .select{-webkit-appearance:none;}
+    .input:focus,.select:focus,.textarea:focus{border-color:var(--amber);}
+    .btn{border:none;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+    .btn-amber{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;}
+    .btn-ghost{background:var(--sf2);border:1px solid var(--bd);color:var(--t);}
+    .btn-danger{background:var(--red-d);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+    .btn:disabled{opacity:.4;cursor:default;}
+    .btn-sm{padding:7px 11px;font-size:12px;border-radius:8px;}
+    /* Tabla */
+    .tbl{width:100%;border-collapse:collapse;}
+    .tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--td);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid var(--bd);}
+    .tbl td{padding:11px 12px;border-bottom:1px solid var(--bd);font-size:14px;color:var(--t);vertical-align:middle;}
+    .tbl tr:last-child td{border-bottom:none;}
+    .tbl tr.inactive{opacity:.45;}
+    .row-name{font-weight:700;color:var(--tb);}
+    .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+    .pill-token{background:var(--amber-d);color:var(--amber);}
+    .pill-serv{background:rgba(139,92,246,.15);color:var(--purple);}
+    .pill-prod{background:var(--blue-d);color:var(--blue);}
+    .pill-bodega{background:var(--green-d);color:var(--green);}
+    .pill-off{background:var(--red-d);color:var(--red);}
+    .chip{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:600;background:var(--sf2);border:1px solid var(--bd);color:var(--t);margin:2px;}
+    .actions{display:flex;gap:6px;justify-content:flex-end;}
+    .empty{text-align:center;padding:48px 20px;color:var(--td);}
+    .sec-title{font-size:18px;font-weight:800;color:var(--tb);}
+    .muted{color:var(--td);font-size:12px;}
+    /* Modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal{background:var(--sf);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;border:1px solid var(--bd);border-radius:18px;padding:22px;}
+    .modal-t{font-size:18px;font-weight:800;color:var(--tb);margin-bottom:16px;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+    .check{display:flex;align-items:center;gap:9px;padding:10px 0;cursor:pointer;font-size:14px;color:var(--t);}
+    .check input{width:18px;height:18px;accent-color:var(--amber);}
+    .multi{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+    .multi-opt{padding:8px 13px;border-radius:9px;border:1px solid var(--bd);background:var(--sf2);color:var(--td);font-size:13px;font-weight:600;cursor:pointer;}
+    .multi-opt.on{background:var(--amber-d);border-color:var(--amber);color:var(--amber);}
+    .stockgrid{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-bottom:8px;}
+    .stockgrid .input{margin-bottom:0;}
+    /* Informes */
+    .filterbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:16px;box-shadow:var(--shadow);}
+    .filterbar .fld{display:flex;flex-direction:column;}
+    .filterbar .fld .label{margin-bottom:4px;}
+    .filterbar .select,.filterbar .input{margin-bottom:0;width:auto;min-width:130px;}
+    .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+    .kpi{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);}
+    .kpi-label{font-size:12px;color:var(--td);font-weight:600;margin-bottom:6px;}
+    .kpi-value{font-size:24px;font-weight:800;color:var(--tb);line-height:1.1;}
+    .kpi-value.green{color:var(--green);} .kpi-value.red{color:var(--red);} .kpi-value.amber{color:var(--amber);}
+    .chart-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:var(--shadow);}
+    .chart{display:flex;align-items:flex-end;gap:3px;height:200px;overflow-x:auto;scrollbar-width:thin;}
+    .bar{flex:1;min-width:10px;background:linear-gradient(180deg,#60a5fa,#2563eb);border-radius:3px 3px 0 0;position:relative;cursor:default;transition:opacity .15s;}
+    .bar:hover{opacity:.75;}
+    .bar-lbl{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--td);white-space:nowrap;}
+    .subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+    .subnav-btn{padding:8px 13px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--td);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+    .subnav-btn.on{background:var(--green-d);border-color:var(--green);color:var(--green);}
+    .num{text-align:right;font-variant-numeric:tabular-nums;}
+    /* Login PIN del back office */
+    .login-wrap{max-width:360px;margin:0 auto;padding:48px 20px;}
+    .pin-dots{display:flex;gap:12px;justify-content:center;margin:8px 0 20px;}
+    .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--bd2);transition:.15s;}
+    .pin-dot.on{background:var(--amber);border-color:var(--amber);}
+    .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    .pin-key{padding:18px 0;border-radius:12px;border:1px solid var(--bd);background:var(--sf2);color:var(--tb);font-size:22px;font-weight:700;cursor:pointer;user-select:none;text-align:center;}
+    .pin-key:active{background:var(--sf3);}
+    .pin-key.back{background:transparent;border-color:transparent;color:var(--td);font-size:18px;}
+    .pin-key.zero{grid-column:2;}
+    .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:400;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+    .toast.ok{background:var(--green);color:#fff;}
+    .toast.err{background:var(--red);color:#fff;}
+    .modal-actions{display:flex;gap:10px;margin-top:18px;}
+    .modal-actions .btn{flex:1;}
+
+
+    .card-t{font-size:14px;font-weight:800;color:var(--tb);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    /* ===== Tema YBRD: identidad monocroma (negro, blanco, plata) ===== */
+    :root{
+      --bg:#0a0a0a;--sf:#151515;--sf2:#1e1e1e;--sf3:#2a2a2a;
+      --bd:#2c2c2c;--bd2:#3a3a3a;
+      --amber:#e0e0e0;--amber-d:rgba(255,255,255,0.08);
+      --blue:#9ad0ff;--blue-d:rgba(154,208,255,0.14);
+      --green:#4ade80;--green-d:rgba(74,222,128,0.12);
+      --red:#f87171;--red-d:rgba(248,113,113,0.14);
+      --purple:#c4b5fd;
+      --t:#e6e6e6;--td:#9a9a9a;--tb:#ffffff;
+      --shadow:0 1px 3px rgba(0,0,0,.5);
+    }
+    .btn-amber{background:linear-gradient(135deg,#f5f5f5,#bdbdbd);color:#000;}
+    .nav-item.active{background:#fff;color:#000;border-color:#fff;}
+    ::selection{background:rgba(255,255,255,.25);}
+    .brand{font-weight:900;letter-spacing:3px;color:#fff;font-size:20px;}
+    .brand small{display:block;letter-spacing:2px;font-size:9px;color:var(--td);font-weight:700;}
+    .logo{display:block;height:34px;}
+    /* ===== Remisión impresa ===== */
+    .remision{background:#fff;color:#000;padding:28px 32px;max-width:720px;margin:0 auto;font-family:var(--font);}
+    .remision table{width:100%;border-collapse:collapse;margin-top:14px;}
+    .remision th{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#555;text-align:left;border-bottom:2px solid #000;padding:6px 4px;}
+    .remision td{padding:8px 4px;border-bottom:1px solid #ddd;font-size:14px;}
+    .remision .tot td{border:none;padding:4px;font-size:14px;}
+    #print-area{display:none;}
+    @media print{
+      body *{visibility:hidden;} body{background:#fff;}
+      #print-area,#print-area *{visibility:visible;}
+      #print-area{display:block;position:absolute;left:0;top:0;width:100%;}
+      .modal-bg{display:none !important;}
+    }
+    .kpi{flex:1 1 150px;padding:12px 14px;}
+    .kpi .v{font-size:24px;font-weight:800;}
+    .estado-pendiente{background:var(--amber-d);color:var(--amber);}
+    .estado-producido{background:var(--blue-d);color:var(--blue);}
+    .estado-envasado{background:rgba(196,181,253,.16);color:var(--purple);}
+    .estado-entregado{background:var(--green-d);color:var(--green);}
+    .estado-cancelado{background:var(--red-d);color:var(--red);}
+    .textarea{min-height:70px;resize:vertical;}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="loading"><div class="loader"></div><img src="logo-blanco.png" alt="YBRD" style="width:160px"></div>
+<div id="print-area"></div>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+// Misma base de datos de Panzer (insumos compartidos)
+const SUPABASE_URL = 'https://gmwqxqeiocjcpablxjcn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdtd3F4cWVpb2NqY3BhYmx4amNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzYwMDksImV4cCI6MjA5NTkxMjAwOX0.O_fSFAHUiZtDNIRShumewEqkPExITBRuxVO2qbMuzxY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const fmt = n => "$"+Math.round(Number(n)||0).toLocaleString("es-CO");
+const num = (n,d=1) => (Number(n)||0).toLocaleString("es-CO",{maximumFractionDigits:d});
+const fLocalDia = f => { const d=new Date(f); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const fLocalHora = f => { const d=new Date(f); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+const hoyISO = () => fLocalDia(new Date());
+const ESTADOS = {pendiente:"Pendiente", producido:"Producido", envasado:"Envasado", entregado:"Entregado", cancelado:"Cancelado"};
+// consumo de un insumo para X kg: la fórmula va en % de peso; los insumos en g se descuentan en gramos
+const consumoDe = (ins, pct, kg) => { const k=(Number(pct)||0)/100*(Number(kg)||0); return (ins && (ins.unidad==='g'||ins.unidad==='ml')) ? k*1000 : k; };
+
+// ============================================================
+// ACCESO A DATOS
+// ============================================================
+const db = {
+  async login(pin){
+    const {data,error}=await sb.rpc('login_pin',{p_pin:String(pin||'')});
+    if(error) throw new Error("Sin conexión con el sistema. Revisa el internet e intenta de nuevo.");
+    if(!data||!data.ok){ if(data&&data.bloqueado) throw new Error(data.error||"Demasiados intentos. Espera 10 minutos."); return null; }
+    return {nombre:String(data.nombre||'').trim(), rol:data.rol};
+  },
+  // ---- insumos (de Panzer, solo lectura) ----
+  async listInsumos(){ const {data,error}=await sb.from('insumos').select('id,nombre,unidad,costo,stock,stock_minimo,tipo,activo').eq('activo',true).order('nombre'); if(error) throw error; return data||[]; },
+  // ---- clientes ----
+  async listClientes(){ const {data,error}=await sb.from('ybrd_clientes').select('*').order('nombre'); if(error) throw error; return data||[]; },
+  async saveCliente(c){
+    const row={nombre:c.nombre.trim(),marca:(c.marca||'').trim()||null,telefono:(c.telefono||'').trim()||null,ciudad:(c.ciudad||'').trim()||null,notas:(c.notas||'').trim()||null,activo:c.activo!==false};
+    if(c.id){ const {error}=await sb.from('ybrd_clientes').update(row).eq('id',c.id); if(error) throw error; }
+    else { const {error}=await sb.from('ybrd_clientes').insert(row); if(error) throw error; }
+  },
+  // ---- fórmulas ----
+  async listFormulas(){ const {data,error}=await sb.from('ybrd_formulas').select('*, ybrd_formula_insumos(insumo_id,pct)').order('nombre'); if(error) throw error; return (data||[]).map(f=>({...f,items:f.ybrd_formula_insumos||[]})); },
+  async saveFormula(f, items){
+    const row={nombre:f.nombre.trim(),cliente_id:f.cliente_id||null,descripcion:(f.descripcion||'').trim()||null,activa:f.activa!==false};
+    let id=f.id;
+    if(id){ const {error}=await sb.from('ybrd_formulas').update(row).eq('id',id); if(error) throw error; }
+    else { const {data,error}=await sb.from('ybrd_formulas').insert(row).select('id').single(); if(error) throw error; id=data.id; }
+    await sb.from('ybrd_formula_insumos').delete().eq('formula_id',id);
+    const rows=items.filter(i=>i.insumo_id && Number(i.pct)>0).map(i=>({formula_id:id,insumo_id:i.insumo_id,pct:Number(i.pct)}));
+    if(rows.length){ const {error}=await sb.from('ybrd_formula_insumos').insert(rows); if(error) throw error; }
+    return id;
+  },
+  // ---- pedidos ----
+  async listPedidos(){ const {data,error}=await sb.from('ybrd_pedidos_v').select('*').order('created_at',{ascending:false}).limit(500); if(error) throw error; return data||[]; },
+  async savePedido(p){
+    const row={cliente_id:p.cliente_id,formula_id:p.formula_id||null,presentacion_g:Number(p.presentacion_g)||0,unidades:Number(p.unidades)||0,precio_unidad:Number(p.precio_unidad)||0,descuento:Number(p.descuento)||0,
+      fecha_entrega:p.fecha_entrega||null,nota:(p.nota||'').trim()||null,etiqueta:(p.etiqueta||'').trim()||null};
+    if(p.id){ const {error}=await sb.from('ybrd_pedidos').update(row).eq('id',p.id); if(error) throw error; }
+    else { const {error}=await sb.from('ybrd_pedidos').insert(row); if(error) throw error; }
+  },
+  async setEstado(id, estado){ const row={estado}; if(estado==='entregado') row.entregado_en=new Date().toISOString(); const {error}=await sb.from('ybrd_pedidos').update(row).eq('id',id); if(error) throw error; },
+  async producir(pedidoId, kg, operador, nota){ const {data,error}=await sb.rpc('ybrd_producir',{p_pedido_id:pedidoId,p_kg:Number(kg),p_operador:operador||null,p_nota:nota||null}); if(error) throw error; return data; },
+  async envasar(pedidoId, unidades, empaques, produccionId, operador, nota){ const {data,error}=await sb.rpc('ybrd_envasar',{p_pedido_id:pedidoId,p_unidades:Number(unidades),p_empaques:empaques,p_produccion_id:produccionId||null,p_operador:operador||null,p_nota:nota||null}); if(error) throw error; return data; },
+  async listProducciones(){ const {data,error}=await sb.from('ybrd_producciones').select('*, ybrd_pedidos(numero,cliente_id,presentacion_g,unidades)').order('created_at',{ascending:false}).limit(300); if(error) throw error; return data||[]; },
+  async produccionInsumos(id){ const {data,error}=await sb.from('ybrd_produccion_insumos').select('*').eq('produccion_id',id).order('costo',{ascending:false}); if(error) return []; return data||[]; },
+  async detallePedido(id){
+    const [pr,en,pa,re]=await Promise.all([
+      sb.from('ybrd_producciones').select('*').eq('pedido_id',id).order('created_at'),
+      sb.from('ybrd_envasados').select('*').eq('pedido_id',id).order('created_at'),
+      sb.from('ybrd_pagos').select('*').eq('pedido_id',id).order('fecha'),
+      sb.from('ybrd_remisiones').select('*').eq('pedido_id',id).order('created_at')]);
+    return {producciones:pr.data||[], envasados:en.data||[], pagos:pa.data||[], remisiones:re.data||[]};
+  },
+  // ---- remisiones de entrega ----
+  async addRemision(r){
+    const {data,error}=await sb.from('ybrd_remisiones').insert({pedido_id:r.pedido_id,fecha:r.fecha||hoyISO(),unidades:Number(r.unidades),precio_unidad:Number(r.precio_unidad)||0,descuento:Number(r.descuento)||0,total:Number(r.total)||0,nota:(r.nota||'').trim()||null}).select('*').single();
+    if(error) throw error; return data;
+  },
+  async setDescuento(pedidoId, descuento){ const {error}=await sb.from('ybrd_pedidos').update({descuento:Number(descuento)||0}).eq('id',pedidoId); if(error) throw error; },
+  // ---- pagos ----
+  async listPagos(){ const {data,error}=await sb.from('ybrd_pagos').select('*, ybrd_pedidos(numero,cliente_id)').order('fecha',{ascending:false}).limit(300); if(error) throw error; return data||[]; },
+  async addPago(p){ const {error}=await sb.from('ybrd_pagos').insert({pedido_id:p.pedido_id,valor:Number(p.valor),medio:p.medio||null,fecha:p.fecha||hoyISO(),nota:(p.nota||'').trim()||null}); if(error) throw error; },
+  async delPago(id){ const {error}=await sb.from('ybrd_pagos').delete().eq('id',id); if(error) throw error; },
+};
+
+// ============================================================
+// APP
+// ============================================================
+function App(){
+  const [auth,setAuth]=useState(null);
+  const [pin,setPin]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [tab,setTab]=useState("pedidos");
+  const [navOpen,setNavOpen]=useState(false);
+  const [toast,setToast]=useState(null);
+  const showToast=(msg,type)=>{ setToast({msg,type:type||'ok'}); setTimeout(()=>setToast(null),3200); };
+  useEffect(()=>{ const l=document.getElementById('loading'); if(l) l.classList.add('hide'); },[]);
+
+  const intentar=async(p)=>{ setBusy(true);
+    try{ const u=await db.login(p);
+      if(!u){ showToast("PIN incorrecto","err"); setPin(""); }
+      else if(u.rol!=='admin'){ showToast("Solo el administrador entra a YBRD","err"); setPin(""); }
+      else setAuth(u); }
+    catch(e){ showToast(""+(e.message||e),"err"); }
+    setBusy(false); };
+  useEffect(()=>{ if(pin.length===4 && !auth && !busy) intentar(pin); },[pin]);
+
+  if(!auth){
+    const tecla=d=>setPin(prev=>(prev+d).slice(0,4));
+    return (
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+        <div className="card" style={{width:"100%",maxWidth:360,textAlign:"center"}}>
+          <img src="logo-blanco.png" alt="YBRD" style={{width:220,maxWidth:"80%",margin:"6px auto 8px",display:"block"}}/>
+          <div className="muted" style={{letterSpacing:2,fontSize:10,fontWeight:700}}>YOUR BRAND · CERAS A LA MEDIDA</div>
+          <div className="card-t" style={{justifyContent:"center",marginTop:14}}>🔒 PIN de administrador</div>
+          <div className="pin-dots">{[0,1,2,3].map(i=><div key={i} className={"pin-dot"+(i<pin.length?" on":"")}/>)}</div>
+          <div className="pinpad">
+            {["1","2","3","4","5","6","7","8","9"].map(d=>(<div key={d} className="pin-key" onClick={()=>tecla(d)}>{d}</div>))}
+            <div className="pin-key back" onClick={()=>setPin(p=>p.slice(0,-1))}>⌫</div>
+            <div className="pin-key zero" onClick={()=>tecla("0")}>0</div>
+          </div>
+          <div className="muted" style={{marginTop:14}}>Mismo PIN del admin de Panzer</div>
+        </div>
+        {toast && <div className={"toast "+(toast.type==='err'?'toast-err':'toast-ok')}>{toast.msg}</div>}
+      </div>
+    );
+  }
+
+  const NAV=[["pedidos","📋","Pedidos"],["clientes","💈","Clientes"],["formulas","🧪","Fórmulas"],["produccion","🏭","Producción"],["cobros","💰","Cobros"],["insumos","📦","Insumos"]];
+  const actual=NAV.find(n=>n[0]===tab)||NAV[0];
+  return (
+    <div className="app" style={{maxWidth:1100}}>
+      <div className="layout">
+        <div className={"nav-overlay"+(navOpen?" show":"")} onClick={()=>setNavOpen(false)}></div>
+        <aside className={"sidebar"+(navOpen?" open":"")}>
+          <div className="sidebar-logo"><img className="logo" src="logo-blanco.png" alt="YBRD"/></div>
+          {NAV.map(([k,ic,l])=>(<div key={k} className={"nav-item"+(tab===k?" active":"")} onClick={()=>{setTab(k);setNavOpen(false);}}><span className="nav-ico">{ic}</span>{l}</div>))}
+          <div style={{marginTop:"auto",paddingTop:10,borderTop:"1px solid var(--bd)"}}>
+            <div className="header-sub" style={{padding:"4px 12px"}}>{auth.nombre}</div>
+            <div className="nav-item" onClick={()=>{setAuth(null);setPin("");}}><span className="nav-ico">🚪</span>Salir</div>
+          </div>
+        </aside>
+        <div className="main">
+          <div className="topbar"><button className="hamburger" onClick={()=>setNavOpen(true)}>☰</button><div className="sec-title">{actual[1]} {actual[2]}</div></div>
+          <div className="page">
+            {tab==="pedidos"    && <Pedidos showToast={showToast} quien={auth.nombre}/>}
+            {tab==="clientes"   && <Clientes showToast={showToast}/>}
+            {tab==="formulas"   && <Formulas showToast={showToast}/>}
+            {tab==="produccion" && <Produccion showToast={showToast}/>}
+            {tab==="cobros"     && <Cobros showToast={showToast}/>}
+            {tab==="insumos"    && <Insumos showToast={showToast}/>}
+          </div>
+        </div>
+      </div>
+      {toast && <div className={"toast "+(toast.type==='err'?'toast-err':'toast-ok')}>{toast.msg}</div>}
+    </div>
+  );
+}
+
+// ============================================================
+// CLIENTES
+// ============================================================
+function Clientes({showToast}){
+  const [rows,setRows]=useState(null);
+  const [q,setQ]=useState("");
+  const [editing,setEditing]=useState(null);
+  const load=async()=>{ try{ setRows(await db.listClientes()); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  useEffect(()=>{ load(); },[]);
+  const guardar=async()=>{ if(!editing.nombre.trim()) return; try{ await db.saveCliente(editing); setEditing(null); await load(); showToast("Cliente guardado ✓"); }catch(e){ showToast(""+(e.message||e),"err"); } };
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const vis=rows.filter(c=>!q || (c.nombre+' '+(c.marca||'')+' '+(c.ciudad||'')).toLowerCase().includes(q.toLowerCase()));
+  return (
+    <div>
+      <div className="toolbar">
+        <input className="input" placeholder="Buscar barbero o marca…" value={q} onChange={e=>setQ(e.target.value)}/>
+        <button className="btn btn-amber" onClick={()=>setEditing({nombre:"",marca:"",telefono:"",ciudad:"",notas:"",activo:true})}>+ Nuevo cliente</button>
+      </div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Barbero</th><th>Marca</th><th>Teléfono</th><th>Ciudad</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {vis.length===0 && <tr><td colSpan="6"><div className="empty">Sin clientes todavía. Crea el primero.</div></td></tr>}
+            {vis.map(c=>(<tr key={c.id} className={c.activo?"":"inactive"}>
+              <td className="row-name">{c.nombre}</td>
+              <td style={{color:"var(--amber)",fontWeight:700}}>{c.marca||<span className="muted">—</span>}</td>
+              <td className="muted">{c.telefono||"—"}</td>
+              <td className="muted">{c.ciudad||"—"}</td>
+              <td>{c.activo?<span className="pill pill-bodega">Activo</span>:<span className="pill pill-off">Inactivo</span>}</td>
+              <td><div className="actions"><button className="btn btn-ghost btn-sm" onClick={()=>setEditing({...c})}>Editar</button></div></td>
+            </tr>))}
+          </tbody>
+        </table>
+      </div>
+      {editing && (
+        <div className="modal-bg" onClick={()=>setEditing(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-t">{editing.id?"Editar cliente":"Nuevo cliente"}</div>
+            <label className="label">Nombre del barbero o barbería</label>
+            <input className="input" value={editing.nombre} onChange={e=>setEditing({...editing,nombre:e.target.value})}/>
+            <label className="label">Marca (lo que va en la etiqueta)</label>
+            <input className="input" value={editing.marca||""} onChange={e=>setEditing({...editing,marca:e.target.value})}/>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:1}}><label className="label">Teléfono</label><input className="input" value={editing.telefono||""} onChange={e=>setEditing({...editing,telefono:e.target.value})}/></div>
+              <div style={{flex:1}}><label className="label">Ciudad</label><input className="input" value={editing.ciudad||""} onChange={e=>setEditing({...editing,ciudad:e.target.value})}/></div>
+            </div>
+            <label className="label">Notas (gustos, aroma, fijación…)</label>
+            <textarea className="textarea input" value={editing.notas||""} onChange={e=>setEditing({...editing,notas:e.target.value})}/>
+            <label className="check"><input type="checkbox" checked={!!editing.activo} onChange={e=>setEditing({...editing,activo:e.target.checked})}/> Activo</label>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={()=>setEditing(null)}>Cancelar</button>
+              <button className="btn btn-amber" disabled={!editing.nombre.trim()} onClick={guardar}>Guardar</button>
+            </div>
+          </div>
+        </div>)}
+    </div>
+  );
+}
+
+// ============================================================
+// FÓRMULAS (ingredientes en % de peso, desde los insumos de Panzer)
+// ============================================================
+function costoKg(items, insumos){ return items.reduce((a,it)=>{ const ins=insumos.find(i=>i.id===it.insumo_id); if(!ins) return a; return a+(Number(ins.costo)||0)*consumoDe(ins,it.pct,1); },0); }
+
+function Formulas({showToast}){
+  const [rows,setRows]=useState(null);
+  const [insumos,setInsumos]=useState([]);
+  const [clientes,setClientes]=useState([]);
+  const [editing,setEditing]=useState(null);
+  const [q,setQ]=useState("");
+  const load=async()=>{ try{ const [f,i,c]=await Promise.all([db.listFormulas(),db.listInsumos(),db.listClientes()]); setRows(f); setInsumos(i); setClientes(c); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  useEffect(()=>{ load(); },[]);
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const nombreCli=id=>{ const c=clientes.find(x=>x.id===id); return c?(c.marca||c.nombre):null; };
+  const vis=rows.filter(f=>!q || (f.nombre+' '+(nombreCli(f.cliente_id)||'')).toLowerCase().includes(q.toLowerCase()));
+  const nueva=()=>setEditing({nombre:"",cliente_id:"",descripcion:"",activa:true,items:[{insumo_id:"",pct:""}]});
+  return (
+    <div>
+      <div className="toolbar">
+        <input className="input" placeholder="Buscar fórmula…" value={q} onChange={e=>setQ(e.target.value)}/>
+        <button className="btn btn-amber" onClick={nueva}>+ Nueva fórmula</button>
+      </div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Fórmula</th><th>Para</th><th className="num">Ingredientes</th><th className="num">Suma %</th><th className="num">Costo / kg</th><th></th></tr></thead>
+          <tbody>
+            {vis.length===0 && <tr><td colSpan="6"><div className="empty">Sin fórmulas todavía.</div></td></tr>}
+            {vis.map(f=>{ const suma=f.items.reduce((a,i)=>a+Number(i.pct||0),0); return (
+              <tr key={f.id} className={f.activa?"":"inactive"}>
+                <td className="row-name">{f.nombre}{f.descripcion && <div className="muted" style={{fontWeight:400}}>{f.descripcion}</div>}</td>
+                <td>{f.cliente_id?<span className="pill pill-token">{nombreCli(f.cliente_id)}</span>:<span className="pill pill-bodega">Compartida</span>}</td>
+                <td className="num">{f.items.length}</td>
+                <td className="num" style={{color:Math.abs(suma-100)<0.01?"var(--green)":"var(--red)",fontWeight:700}}>{num(suma,2)}%</td>
+                <td className="num" style={{fontWeight:700}}>{fmt(costoKg(f.items,insumos))}</td>
+                <td><div className="actions"><button className="btn btn-ghost btn-sm" onClick={()=>setEditing({...f,items:f.items.map(i=>({...i}))})}>Editar</button></div></td>
+              </tr>); })}
+          </tbody>
+        </table>
+      </div>
+      {editing && <FormulaEditor f={editing} insumos={insumos} clientes={clientes} onClose={()=>setEditing(null)} onSaved={()=>{ setEditing(null); load(); showToast("Fórmula guardada ✓"); }} showToast={showToast}/>}
+    </div>
+  );
+}
+
+function FormulaEditor({f, insumos, clientes, onClose, onSaved, showToast}){
+  const [e,setE]=useState(f);
+  const [busy,setBusy]=useState(false);
+  const quimicos=insumos.filter(i=>i.tipo!=='empaque');
+  const setItem=(k,patch)=>setE(x=>({...x,items:x.items.map((it,j)=>j===k?{...it,...patch}:it)}));
+  const suma=e.items.reduce((a,i)=>a+Number(i.pct||0),0);
+  const costo=costoKg(e.items,insumos);
+  const guardar=async()=>{ if(!e.nombre.trim()) return; setBusy(true); try{ await db.saveFormula(e,e.items); onSaved(); }catch(er){ showToast(""+(er.message||er),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{maxWidth:680}} onClick={ev=>ev.stopPropagation()}>
+        <div className="modal-t">{e.id?"Editar fórmula":"Nueva fórmula"}</div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:2}}><label className="label">Nombre</label><input className="input" placeholder="Ej: Cera mate fijación fuerte" value={e.nombre} onChange={ev=>setE({...e,nombre:ev.target.value})}/></div>
+          <div style={{flex:1}}><label className="label">Para</label>
+            <select className="select" value={e.cliente_id||""} onChange={ev=>setE({...e,cliente_id:ev.target.value})}>
+              <option value="">Compartida (base)</option>{clientes.filter(c=>c.activo).map(c=><option key={c.id} value={c.id}>{c.marca||c.nombre}</option>)}
+            </select></div>
+        </div>
+        <label className="label">Descripción (acabado, aroma, notas de proceso)</label>
+        <input className="input" value={e.descripcion||""} onChange={ev=>setE({...e,descripcion:ev.target.value})}/>
+        <label className="label">Ingredientes · % en peso</label>
+        {e.items.map((it,k)=>{ const ins=insumos.find(i=>i.id===it.insumo_id); return (
+          <div key={k} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+            <select className="select" style={{margin:0,flex:3}} value={it.insumo_id||""} onChange={ev=>setItem(k,{insumo_id:ev.target.value})}>
+              <option value="">— Insumo —</option>{quimicos.map(i=><option key={i.id} value={i.id}>{i.nombre} ({i.unidad})</option>)}
+            </select>
+            <input className="input" style={{margin:0,width:90,textAlign:"right"}} type="number" step="0.01" placeholder="%" value={it.pct} onChange={ev=>setItem(k,{pct:ev.target.value})}/>
+            <span className="muted" style={{width:90,textAlign:"right"}}>{ins?fmt((Number(ins.costo)||0)*consumoDe(ins,it.pct,1)):""}</span>
+            <button className="btn btn-danger btn-sm" onClick={()=>setE(x=>({...x,items:x.items.filter((_,j)=>j!==k)}))}>✕</button>
+          </div>); })}
+        <button className="btn btn-ghost btn-sm" onClick={()=>setE(x=>({...x,items:[...x.items,{insumo_id:"",pct:""}]}))}>+ Ingrediente</button>
+        <div style={{display:"flex",gap:14,marginTop:14,padding:"10px 12px",borderRadius:10,background:"var(--sf2)"}}>
+          <div><div className="muted">Suma</div><div style={{fontWeight:800,color:Math.abs(suma-100)<0.01?"var(--green)":"var(--red)"}}>{num(suma,2)}%{Math.abs(suma-100)>=0.01 && <span className="muted" style={{marginLeft:6}}>debe dar 100</span>}</div></div>
+          <div><div className="muted">Costo por kilo</div><div style={{fontWeight:800,color:"var(--amber)"}}>{fmt(costo)}</div></div>
+          <div><div className="muted">Costo por 100 g</div><div style={{fontWeight:800}}>{fmt(costo/10)}</div></div>
+        </div>
+        <label className="check"><input type="checkbox" checked={e.activa!==false} onChange={ev=>setE({...e,activa:ev.target.checked})}/> Activa</label>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" disabled={busy||!e.nombre.trim()} onClick={guardar}>{busy?"Guardando…":"Guardar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PEDIDOS (el centro de todo: crear → producir → envasar → entregar → cobrar)
+// ============================================================
+function Pedidos({showToast, quien}){
+  const [rows,setRows]=useState(null);
+  const [clientes,setClientes]=useState([]);
+  const [formulas,setFormulas]=useState([]);
+  const [insumos,setInsumos]=useState([]);
+  const [filtro,setFiltro]=useState('abiertos');
+  const [editing,setEditing]=useState(null);
+  const [ver,setVer]=useState(null);
+  const load=async()=>{ try{ const [p,c,f,i]=await Promise.all([db.listPedidos(),db.listClientes(),db.listFormulas(),db.listInsumos()]); setRows(p); setClientes(c); setFormulas(f); setInsumos(i); if(ver){ const n=p.find(x=>x.id===ver.id); if(n) setVer(n); } }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } };
+  useEffect(()=>{ load(); },[]);
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const vis=rows.filter(p=>filtro==='todos'?true:filtro==='abiertos'?!['entregado','cancelado'].includes(p.estado):p.estado===filtro);
+  const abiertos=rows.filter(p=>!['entregado','cancelado'].includes(p.estado));
+  const saldoTotal=rows.filter(p=>p.estado!=='cancelado').reduce((a,p)=>a+Math.max(0,Number(p.total)-Number(p.pagado)),0);
+  const nuevo=()=>setEditing({cliente_id:(clientes[0]||{}).id||"",formula_id:"",presentacion_g:100,unidades:12,precio_unidad:0,descuento:0,fecha_entrega:"",nota:"",etiqueta:""});
+  const guardar=async()=>{ if(!editing.cliente_id||!(Number(editing.unidades)>0)||!(Number(editing.presentacion_g)>0)) return; try{ await db.savePedido(editing); setEditing(null); await load(); showToast("Pedido guardado ✓"); }catch(e){ showToast(""+(e.message||e),"err"); } };
+  const formulasDe=cid=>formulas.filter(f=>f.activa && (!f.cliente_id || f.cliente_id===cid));
+  return (
+    <div>
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}}>
+        <div className="card kpi"><div className="muted">Pedidos abiertos</div><div className="v" style={{color:"var(--amber)"}}>{abiertos.length}</div><div className="muted">{abiertos.reduce((a,p)=>a+Number(p.unidades),0)} unidades por entregar</div></div>
+        <div className="card kpi"><div className="muted">Por cobrar</div><div className="v" style={{color:saldoTotal>0?"var(--red)":"var(--green)"}}>{fmt(saldoTotal)}</div><div className="muted">de todos los pedidos no cancelados</div></div>
+        <div className="card kpi"><div className="muted">Entregados</div><div className="v">{rows.filter(p=>p.estado==='entregado').length}</div><div className="muted">en total</div></div>
+      </div>
+      <div className="toolbar">
+        <select className="select" value={filtro} onChange={e=>setFiltro(e.target.value)}>
+          <option value="abiertos">Abiertos</option><option value="todos">Todos</option>
+          {Object.entries(ESTADOS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+        </select>
+        <button className="btn btn-amber" style={{marginLeft:"auto"}} disabled={clientes.length===0} onClick={nuevo}>+ Nuevo pedido</button>
+      </div>
+      {clientes.length===0 && <div className="card" style={{marginBottom:12}}><span className="muted">Primero crea un cliente en 💈 Clientes y una fórmula en 🧪 Fórmulas.</span></div>}
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>#</th><th>Cliente</th><th>Fórmula</th><th className="num">Unidades</th><th className="num">Total</th><th className="num">Saldo</th><th>Entrega</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {vis.length===0 && <tr><td colSpan="9"><div className="empty">No hay pedidos con ese filtro.</div></td></tr>}
+            {vis.map(p=>{ const saldo=Number(p.total)-Number(p.pagado); const tarde=p.fecha_entrega && p.fecha_entrega<hoyISO() && !['entregado','cancelado'].includes(p.estado); return (
+              <tr key={p.id}>
+                <td className="muted">#{p.numero}</td>
+                <td className="row-name">{p.cliente_marca||p.cliente_nombre}{p.cliente_marca && <div className="muted" style={{fontWeight:400}}>{p.cliente_nombre}</div>}</td>
+                <td>{p.formula_nombre||<span className="muted">sin fórmula</span>}</td>
+                <td className="num">{p.unidades} × {num(p.presentacion_g,0)} g</td>
+                <td className="num" style={{fontWeight:700}}>{fmt(p.total)}</td>
+                <td className="num" style={{color:saldo>0?"var(--red)":"var(--green)",fontWeight:700}}>{saldo>0?fmt(saldo):"Pagado"}</td>
+                <td className="muted" style={{color:tarde?"var(--red)":undefined}}>{p.fecha_entrega||"—"}{tarde?" ⚠":""}</td>
+                <td><span className={"pill estado-"+p.estado}>{ESTADOS[p.estado]||p.estado}</span></td>
+                <td><div className="actions"><button className="btn btn-ghost btn-sm" onClick={()=>setVer(p)}>Abrir</button></div></td>
+              </tr>); })}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && (
+        <div className="modal-bg" onClick={()=>setEditing(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-t">{editing.id?"Editar pedido":"Nuevo pedido"}</div>
+            <label className="label">Cliente</label>
+            <select className="select" value={editing.cliente_id} onChange={e=>setEditing({...editing,cliente_id:e.target.value,formula_id:""})}>
+              {clientes.filter(c=>c.activo||c.id===editing.cliente_id).map(c=><option key={c.id} value={c.id}>{c.marca?c.marca+" · "+c.nombre:c.nombre}</option>)}
+            </select>
+            <label className="label">Fórmula</label>
+            <select className="select" value={editing.formula_id||""} onChange={e=>setEditing({...editing,formula_id:e.target.value})}>
+              <option value="">— Elige la fórmula —</option>
+              {formulasDe(editing.cliente_id).map(f=><option key={f.id} value={f.id}>{f.nombre}{f.cliente_id?" (propia)":""}</option>)}
+            </select>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:1}}><label className="label">Presentación (g)</label><input className="input" type="number" value={editing.presentacion_g} onChange={e=>setEditing({...editing,presentacion_g:e.target.value})}/></div>
+              <div style={{flex:1}}><label className="label">Unidades</label><input className="input" type="number" value={editing.unidades} onChange={e=>setEditing({...editing,unidades:e.target.value})}/></div>
+              <div style={{flex:1}}><label className="label">Precio por unidad</label><input className="input" type="number" value={editing.precio_unidad} onChange={e=>setEditing({...editing,precio_unidad:e.target.value})}/></div>
+            </div>
+            <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+              <div style={{flex:1}}><label className="label">Descuento ($)</label><input className="input" type="number" value={editing.descuento||0} onChange={e=>setEditing({...editing,descuento:e.target.value})}/></div>
+              <div style={{flex:2,paddingBottom:14}} className="muted">Subtotal {fmt((Number(editing.unidades)||0)*(Number(editing.precio_unidad)||0))}{Number(editing.descuento)>0?(" − "+fmt(editing.descuento)):""} = <b style={{color:"var(--tb)"}}>Total {fmt((Number(editing.unidades)||0)*(Number(editing.precio_unidad)||0)-(Number(editing.descuento)||0))}</b><br/>producto: {num((Number(editing.unidades)||0)*(Number(editing.presentacion_g)||0)/1000,2)} kg</div>
+            </div>
+            <label className="label">Fecha de entrega</label>
+            <input className="input" type="date" value={editing.fecha_entrega||""} onChange={e=>setEditing({...editing,fecha_entrega:e.target.value})}/>
+            <label className="label">Etiqueta (marca, texto, color…)</label>
+            <input className="input" value={editing.etiqueta||""} onChange={e=>setEditing({...editing,etiqueta:e.target.value})}/>
+            <label className="label">Nota</label>
+            <input className="input" value={editing.nota||""} onChange={e=>setEditing({...editing,nota:e.target.value})}/>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={()=>setEditing(null)}>Cancelar</button>
+              <button className="btn btn-amber" disabled={!editing.cliente_id||!(Number(editing.unidades)>0)} onClick={guardar}>Guardar</button>
+            </div>
+          </div>
+        </div>)}
+
+      {ver && <PedidoDetalle p={ver} formulas={formulas} insumos={insumos} quien={quien} showToast={showToast} onClose={()=>setVer(null)} onChange={load} onEditar={()=>{ setEditing({...ver}); setVer(null); }}/>}
+    </div>
+  );
+}
+
+function PedidoDetalle({p, formulas, insumos, quien, showToast, onClose, onChange, onEditar}){
+  const [det,setDet]=useState(null);
+  const [modo,setModo]=useState(null);   // 'producir' | 'envasar' | 'pago' | 'remision'
+  const [imprimir,setImprimir]=useState(null);   // remisión a mostrar/imprimir
+  const [busy,setBusy]=useState(false);
+  const cargar=async()=>{ try{ setDet(await db.detallePedido(p.id)); }catch(e){ setDet({producciones:[],envasados:[],pagos:[],remisiones:[]}); } };
+  const unidadesRemitidas=Number(p.unidades_remitidas)||0;
+  useEffect(()=>{ cargar(); },[p.id]);
+  const f=formulas.find(x=>x.id===p.formula_id);
+  const kgNecesarios=Number(p.unidades)*Number(p.presentacion_g)/1000;
+  const saldo=Number(p.total)-Number(p.pagado);
+  const costoTotal=Number(p.costo_produccion)+Number(p.costo_empaque);
+  const unidadesEnv=Number(p.unidades_envasadas)||0;
+  const costoUnidad=unidadesEnv>0?costoTotal/unidadesEnv:(Number(p.unidades)>0?costoTotal/Number(p.unidades):0);
+  const cambiar=async(estado)=>{ if(busy) return; setBusy(true); try{ await db.setEstado(p.id,estado); showToast("Pedido "+ESTADOS[estado].toLowerCase()); await onChange(); }catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{maxWidth:720}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <div className="modal-t" style={{margin:0}}>Pedido #{p.numero}</div>
+          <span className={"pill estado-"+p.estado}>{ESTADOS[p.estado]||p.estado}</span>
+          <button className="btn btn-ghost btn-sm" style={{marginLeft:"auto"}} onClick={onEditar}>Editar</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:14,marginBottom:10}}>
+          <div><span className="muted">Cliente</span><br/><b>{p.cliente_marca||p.cliente_nombre}</b>{p.cliente_marca && <span className="muted"> · {p.cliente_nombre}</span>}</div>
+          <div><span className="muted">Fórmula</span><br/><b>{p.formula_nombre||"—"}</b></div>
+          <div><span className="muted">Pedido</span><br/><b>{p.unidades} × {num(p.presentacion_g,0)} g</b> = {num(kgNecesarios,2)} kg</div>
+          <div><span className="muted">Entrega</span><br/><b>{p.fecha_entrega||"—"}</b></div>
+          <div><span className="muted">Total</span><br/><b>{fmt(p.total)}</b> <span className="muted">({fmt(p.precio_unidad)} c/u{Number(p.descuento)>0?(" · desc. "+fmt(p.descuento)):""})</span></div>
+          <div><span className="muted">Saldo</span><br/><b style={{color:saldo>0?"var(--red)":"var(--green)"}}>{saldo>0?fmt(saldo):"Pagado"}</b></div>
+          {p.etiqueta && <div style={{gridColumn:"1 / -1"}}><span className="muted">Etiqueta</span><br/>{p.etiqueta}</div>}
+          {p.nota && <div style={{gridColumn:"1 / -1"}}><span className="muted">Nota</span><br/>{p.nota}</div>}
+        </div>
+
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",padding:"10px 12px",borderRadius:10,background:"var(--sf2)",marginBottom:12}}>
+          <div><div className="muted">Producido</div><div style={{fontWeight:800}}>{num(p.kg_producidos,2)} kg <span className="muted">de {num(kgNecesarios,2)}</span></div></div>
+          <div><div className="muted">Envasado</div><div style={{fontWeight:800}}>{unidadesEnv} <span className="muted">de {p.unidades}</span></div></div>
+          <div><div className="muted">Costo total</div><div style={{fontWeight:800}}>{fmt(costoTotal)}</div></div>
+          <div><div className="muted">Costo / unidad</div><div style={{fontWeight:800,color:"var(--amber)"}}>{fmt(costoUnidad)}</div></div>
+          <div><div className="muted">Margen</div><div style={{fontWeight:800,color:Number(p.total)>costoTotal?"var(--green)":"var(--red)"}}>{Number(p.total)>0?Math.round((Number(p.total)-costoTotal)/Number(p.total)*100)+"%":"—"}</div></div>
+        </div>
+
+        {p.estado!=='cancelado' && (
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+            <button className="btn btn-amber btn-sm" disabled={!f||busy} onClick={()=>setModo('producir')}>🏭 Producir</button>
+            <button className="btn btn-amber btn-sm" disabled={busy} onClick={()=>setModo('envasar')}>📦 Envasar</button>
+            {p.estado!=='entregado' && <button className="btn btn-ghost btn-sm" disabled={busy} onClick={()=>cambiar('entregado')}>✓ Marcar entregado</button>}
+            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={()=>setModo('pago')}>💰 Registrar pago</button>
+            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={()=>setModo('remision')}>📄 Remisión</button>
+            {p.estado!=='entregado' && <button className="btn btn-danger btn-sm" style={{marginLeft:"auto"}} disabled={busy} onClick={()=>{ if(confirm("¿Cancelar el pedido #"+p.numero+"?")) cambiar('cancelado'); }}>Cancelar pedido</button>}
+          </div>)}
+        {!f && p.estado!=='cancelado' && <div className="muted" style={{marginBottom:10}}>Para producir, edita el pedido y asígnale una fórmula.</div>}
+
+        {det===null ? <div className="empty">Cargando…</div> : (<div>
+          {det.producciones.length>0 && (<div style={{marginBottom:10}}>
+            <div className="label">Lotes producidos</div>
+            {det.producciones.map(x=>(<div key={x.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}><span>🏭 {fLocalDia(x.created_at)} {fLocalHora(x.created_at)} · <b>{num(x.kg,2)} kg</b>{x.nota?(" · "+x.nota):""}</span><span>{fmt(x.costo_total)} <span className="muted">({fmt(Number(x.kg)>0?Number(x.costo_total)/Number(x.kg):0)}/kg)</span></span></div>))}
+          </div>)}
+          {det.envasados.length>0 && (<div style={{marginBottom:10}}>
+            <div className="label">Envasados</div>
+            {det.envasados.map(x=>(<div key={x.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}><span>📦 {fLocalDia(x.created_at)} · <b>{x.unidades} unidades</b>{(x.empaques||[]).length?(" · "+(x.empaques||[]).map(e=>e.nombre).join(", ")):""}</span><span>{fmt(x.costo_empaque)}</span></div>))}
+          </div>)}
+          {(det.remisiones||[]).length>0 && (<div style={{marginBottom:10}}>
+            <div className="label">Remisiones</div>
+            {det.remisiones.map(x=>(<div key={x.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}><span>📄 Remisión N° {x.numero} · {x.fecha} · <b>{x.unidades} unidades</b>{x.nota?(" · "+x.nota):""}</span><span>{fmt(x.total)} <button className="btn btn-ghost btn-sm" style={{marginLeft:6}} onClick={()=>setImprimir(x)}>Ver / imprimir</button></span></div>))}
+          </div>)}
+          {det.pagos.length>0 && (<div style={{marginBottom:10}}>
+            <div className="label">Pagos</div>
+            {det.pagos.map(x=>(<div key={x.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}><span>💰 {x.fecha} · {x.medio||"—"}{x.nota?(" · "+x.nota):""}</span><span><b>{fmt(x.valor)}</b> <button className="btn btn-ghost btn-sm" style={{marginLeft:6}} onClick={async()=>{ if(!confirm("¿Borrar este pago?")) return; try{ await db.delPago(x.id); await cargar(); await onChange(); }catch(e){ showToast(""+(e.message||e),"err"); } }}>✕</button></span></div>))}
+          </div>)}
+        </div>)}
+
+        <div className="modal-actions"><button className="btn btn-ghost" onClick={onClose}>Cerrar</button></div>
+
+        {modo==='producir' && <ProducirModal p={p} f={f} insumos={insumos} kgSugeridos={kgNecesarios} quien={quien} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
+        {modo==='envasar' && <EnvasarModal p={p} insumos={insumos} producciones={(det||{}).producciones||[]} quien={quien} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
+        {modo==='pago' && <PagoModal p={p} saldo={saldo} showToast={showToast} onClose={()=>setModo(null)} onDone={async()=>{ setModo(null); await cargar(); await onChange(); }}/>}
+        {modo==='remision' && <RemisionModal p={p} pendientes={Math.max(0,Number(p.unidades)-unidadesRemitidas)} showToast={showToast} onClose={()=>setModo(null)} onDone={async(r)=>{ setModo(null); await cargar(); await onChange(); setImprimir(r); }}/>}
+        {imprimir && <RemisionVista r={imprimir} p={p} onClose={()=>setImprimir(null)}/>}
+      </div>
+    </div>
+  );
+}
+
+function ProducirModal({p, f, insumos, kgSugeridos, quien, showToast, onClose, onDone}){
+  const [merma,setMerma]=useState(5);
+  const [kg,setKg]=useState(()=>String(Math.round(kgSugeridos*1.05*1000)/1000));
+  const [nota,setNota]=useState("");
+  const [busy,setBusy]=useState(false);
+  useEffect(()=>{ setKg(String(Math.round(kgSugeridos*(1+Number(merma)/100)*1000)/1000)); },[merma]);
+  const items=f.items.map(it=>{ const ins=insumos.find(i=>i.id===it.insumo_id)||{nombre:"?",unidad:"",costo:0,stock:0}; const cant=consumoDe(ins,it.pct,kg); return {...it,ins,cant,costo:(Number(ins.costo)||0)*cant,falta:Number(ins.stock)<cant}; });
+  const costo=items.reduce((a,i)=>a+i.costo,0);
+  const confirmar=async()=>{ if(busy) return; setBusy(true);
+    try{ const r=await db.producir(p.id,kg,quien,nota); if(r&&r.ok){ showToast("Lote producido: "+fmt(r.costo)+" ✓"); onDone(); } else showToast((r&&r.error)||"No se pudo producir","err"); }
+    catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose} style={{zIndex:260}}>
+      <div className="modal" style={{maxWidth:640}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-t">🏭 Producir · {f.nombre}</div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1}}><label className="label">Kilos a fabricar</label><input className="input" type="number" step="0.001" value={kg} onChange={e=>setKg(e.target.value)}/></div>
+          <div style={{flex:1}}><label className="label">Merma estimada (%)</label><input className="input" type="number" value={merma} onChange={e=>setMerma(e.target.value)}/></div>
+        </div>
+        <div className="muted" style={{marginTop:-6,marginBottom:10}}>El pedido necesita {num(kgSugeridos,3)} kg ({p.unidades} × {num(p.presentacion_g,0)} g). Se descuenta de los insumos de Panzer.</div>
+        <div className="card" style={{padding:0,overflowX:"auto"}}>
+          <table className="tbl">
+            <thead><tr><th>Insumo</th><th className="num">%</th><th className="num">Consumo</th><th className="num">Stock</th><th className="num">Costo</th></tr></thead>
+            <tbody>{items.map((i,k)=>(<tr key={k} style={{background:i.falta?"var(--red-d)":undefined}}>
+              <td className="row-name">{i.ins.nombre}</td><td className="num">{num(i.pct,2)}%</td>
+              <td className="num">{num(i.cant,i.ins.unidad==='g'?0:3)} {i.ins.unidad}</td>
+              <td className="num" style={{color:i.falta?"var(--red)":"var(--td)"}}>{num(i.ins.stock,i.ins.unidad==='g'?0:2)}{i.falta?" ⚠":""}</td>
+              <td className="num">{fmt(i.costo)}</td></tr>))}</tbody>
+          </table>
+        </div>
+        <div style={{display:"flex",gap:14,marginTop:10,padding:"10px 12px",borderRadius:10,background:"var(--sf2)"}}>
+          <div><div className="muted">Costo del lote</div><div style={{fontWeight:800,color:"var(--amber)"}}>{fmt(costo)}</div></div>
+          <div><div className="muted">Costo por kilo</div><div style={{fontWeight:800}}>{fmt(Number(kg)>0?costo/Number(kg):0)}</div></div>
+          <div><div className="muted">Costo por unidad</div><div style={{fontWeight:800}}>{fmt(Number(p.unidades)>0?costo/Number(p.unidades):0)}</div></div>
+        </div>
+        {items.some(i=>i.falta) && <div className="muted" style={{marginTop:8,color:"var(--red)"}}>⚠ Hay insumos sin stock suficiente. Se puede producir igual (el stock queda negativo) pero conviene ingresar la compra en el admin de Panzer.</div>}
+        <label className="label" style={{marginTop:10}}>Nota del lote (opcional)</label>
+        <input className="input" value={nota} onChange={e=>setNota(e.target.value)}/>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" disabled={busy||!(Number(kg)>0)} onClick={confirmar}>{busy?"Produciendo…":"Confirmar producción"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EnvasarModal({p, insumos, producciones, quien, showToast, onClose, onDone}){
+  const empaques=insumos.filter(i=>i.tipo==='empaque');
+  const [unidades,setUnidades]=useState(String(Math.max(0,Number(p.unidades)-Number(p.unidades_envasadas||0))||p.unidades));
+  const [items,setItems]=useState([{insumo_id:"",por_unidad:1}]);
+  const [prodId,setProdId]=useState((producciones[producciones.length-1]||{}).id||"");
+  const [nota,setNota]=useState("");
+  const [busy,setBusy]=useState(false);
+  const kgProd=Number(p.kg_producidos)||0;
+  const kgEnvasados=Number(unidades)*Number(p.presentacion_g)/1000;
+  const rendimiento=kgProd>0?(kgEnvasados/kgProd*100):null;
+  const costoEmp=items.reduce((a,it)=>{ const ins=empaques.find(i=>i.id===it.insumo_id); return a+(ins?(Number(ins.costo)||0)*Number(it.por_unidad||0)*Number(unidades||0):0); },0);
+  const confirmar=async()=>{ if(busy) return; setBusy(true);
+    try{ const r=await db.envasar(p.id,unidades,items.filter(i=>i.insumo_id).map(i=>({insumo_id:i.insumo_id,por_unidad:Number(i.por_unidad)||1})),prodId||null,quien,nota);
+      if(r&&r.ok){ showToast("Envasado registrado ✓"); onDone(); } else showToast((r&&r.error)||"No se pudo envasar","err"); }
+    catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose} style={{zIndex:260}}>
+      <div className="modal" style={{maxWidth:620}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-t">📦 Envasar · pedido #{p.numero}</div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1}}><label className="label">Unidades que salieron</label><input className="input" type="number" value={unidades} onChange={e=>setUnidades(e.target.value)}/></div>
+          <div style={{flex:1}}><label className="label">Presentación</label><div className="input" style={{opacity:.7}}>{num(p.presentacion_g,0)} g</div></div>
+        </div>
+        <div className="muted" style={{marginTop:-6,marginBottom:10}}>{kgProd>0?("Producidos "+num(kgProd,2)+" kg · envasas "+num(kgEnvasados,2)+" kg · rendimiento "+Math.round(rendimiento)+"%"):"Este pedido aún no tiene lote producido; igual puedes registrar el envasado."}</div>
+        {producciones.length>1 && (<div><label className="label">Lote</label><select className="select" value={prodId} onChange={e=>setProdId(e.target.value)}>{producciones.map(x=><option key={x.id} value={x.id}>{fLocalDia(x.created_at)} · {num(x.kg,2)} kg</option>)}</select></div>)}
+        <label className="label">Empaques por unidad (frasco, tapa, etiqueta…)</label>
+        {items.map((it,k)=>(<div key={k} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+          <select className="select" style={{margin:0,flex:3}} value={it.insumo_id} onChange={e=>setItems(x=>x.map((y,j)=>j===k?{...y,insumo_id:e.target.value}:y))}>
+            <option value="">— Empaque —</option>{empaques.map(i=><option key={i.id} value={i.id}>{i.nombre} · {fmt(i.costo)} · stock {num(i.stock,0)}</option>)}
+          </select>
+          <input className="input" style={{margin:0,width:80,textAlign:"right"}} type="number" step="0.01" value={it.por_unidad} onChange={e=>setItems(x=>x.map((y,j)=>j===k?{...y,por_unidad:e.target.value}:y))}/>
+          <button className="btn btn-danger btn-sm" onClick={()=>setItems(x=>x.filter((_,j)=>j!==k))}>✕</button>
+        </div>))}
+        <button className="btn btn-ghost btn-sm" onClick={()=>setItems(x=>[...x,{insumo_id:"",por_unidad:1}])}>+ Empaque</button>
+        <div style={{display:"flex",gap:14,marginTop:12,padding:"10px 12px",borderRadius:10,background:"var(--sf2)"}}>
+          <div><div className="muted">Costo de empaque</div><div style={{fontWeight:800,color:"var(--amber)"}}>{fmt(costoEmp)}</div></div>
+          <div><div className="muted">Por unidad</div><div style={{fontWeight:800}}>{fmt(Number(unidades)>0?costoEmp/Number(unidades):0)}</div></div>
+        </div>
+        <label className="label" style={{marginTop:10}}>Nota (opcional)</label>
+        <input className="input" value={nota} onChange={e=>setNota(e.target.value)}/>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" disabled={busy||!(Number(unidades)>0)} onClick={confirmar}>{busy?"Guardando…":"Confirmar envasado"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Remisión: documento de entrega para el cliente. Una por entrega (puede ser parcial).
+function RemisionModal({p, pendientes, showToast, onClose, onDone}){
+  const [unidades,setUnidades]=useState(String(pendientes||p.unidades));
+  const [fecha,setFecha]=useState(hoyISO());
+  const [descuento,setDescuento]=useState(String(Number(p.descuento)||0));
+  const [nota,setNota]=useState("");
+  const [entregar,setEntregar]=useState(true);
+  const [busy,setBusy]=useState(false);
+  const subtotal=(Number(unidades)||0)*(Number(p.precio_unidad)||0);
+  const completa=(Number(unidades)||0)>=pendientes;
+  const desc=completa?(Number(descuento)||0):0;   // el descuento del pedido se aplica en la entrega que lo completa
+  const total=subtotal-desc;
+  const confirmar=async()=>{ if(busy||!(Number(unidades)>0)) return; setBusy(true);
+    try{
+      if(Number(descuento)!==Number(p.descuento)) await db.setDescuento(p.id,descuento);
+      const r=await db.addRemision({pedido_id:p.id,fecha,unidades,precio_unidad:p.precio_unidad,descuento:desc,total,nota});
+      if(entregar && completa && p.estado!=='entregado') await db.setEstado(p.id,'entregado');
+      showToast("Remisión N° "+r.numero+" creada ✓"); onDone(r);
+    }catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose} style={{zIndex:260}}>
+      <div className="modal" style={{maxWidth:460}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-t">📄 Nueva remisión · pedido #{p.numero}</div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1}}><label className="label">Unidades a entregar</label><input className="input" type="number" value={unidades} onChange={e=>setUnidades(e.target.value)}/></div>
+          <div style={{flex:1}}><label className="label">Fecha</label><input className="input" type="date" value={fecha} onChange={e=>setFecha(e.target.value)}/></div>
+        </div>
+        <div className="muted" style={{marginTop:-6,marginBottom:10}}>Pendientes por entregar: {pendientes} de {p.unidades}.</div>
+        <label className="label">Descuento del pedido ($)</label>
+        <input className="input" type="number" value={descuento} onChange={e=>setDescuento(e.target.value)}/>
+        {!completa && Number(descuento)>0 && <div className="muted" style={{marginTop:-6,marginBottom:10}}>Es una entrega parcial: el descuento se aplica en la remisión que complete el pedido.</div>}
+        <label className="label">Nota para el cliente (opcional)</label>
+        <input className="input" value={nota} onChange={e=>setNota(e.target.value)}/>
+        <div style={{display:"flex",gap:14,padding:"10px 12px",borderRadius:10,background:"var(--sf2)",marginBottom:6}}>
+          <div><div className="muted">Subtotal</div><div style={{fontWeight:800}}>{fmt(subtotal)}</div></div>
+          <div><div className="muted">Descuento</div><div style={{fontWeight:800}}>{desc>0?("− "+fmt(desc)):"—"}</div></div>
+          <div><div className="muted">Total remisión</div><div style={{fontWeight:800,color:"var(--tb)"}}>{fmt(total)}</div></div>
+        </div>
+        {completa && <label className="check"><input type="checkbox" checked={entregar} onChange={e=>setEntregar(e.target.checked)}/> Marcar el pedido como entregado</label>}
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" disabled={busy||!(Number(unidades)>0)} onClick={confirmar}>{busy?"Guardando…":"Crear remisión"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RemisionVista({r, p, onClose}){
+  const ref=useRef(null);
+  const saldo=Math.max(0,Number(p.total)-Number(p.pagado));
+  const imprimir=()=>{ const area=document.getElementById('print-area'); area.innerHTML=ref.current.outerHTML; window.print(); setTimeout(()=>{ area.innerHTML=""; },1000); };
+  const subtotal=Number(r.unidades)*Number(r.precio_unidad);
+  return (
+    <div className="modal-bg" onClick={onClose} style={{zIndex:270}}>
+      <div className="modal" style={{maxWidth:780,padding:0,background:"transparent",boxShadow:"none"}} onClick={e=>e.stopPropagation()}>
+        <div ref={ref} className="remision">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div><img src="logo-negro.png" alt="YBRD" style={{width:180,display:"block"}}/><div style={{fontSize:10,letterSpacing:2,color:"#555",marginTop:4}}>YOUR BRAND · CERAS CAPILARES A LA MEDIDA</div></div>
+            <div style={{textAlign:"right"}}><div style={{fontSize:12,letterSpacing:2,color:"#555"}}>REMISIÓN</div><div style={{fontSize:28,fontWeight:900}}>N° {String(r.numero).padStart(4,'0')}</div><div style={{fontSize:13}}>{r.fecha}</div></div>
+          </div>
+          <div style={{display:"flex",gap:24,marginTop:18,fontSize:13}}>
+            <div style={{flex:1}}><div style={{fontSize:10,letterSpacing:1,color:"#555"}}>CLIENTE</div><div style={{fontWeight:800,fontSize:15}}>{p.cliente_nombre}</div>{p.cliente_marca && <div>Marca: <b>{p.cliente_marca}</b></div>}{p.cliente_telefono && <div>Tel: {p.cliente_telefono}</div>}{p.cliente_ciudad && <div>{p.cliente_ciudad}</div>}</div>
+            <div style={{flex:1}}><div style={{fontSize:10,letterSpacing:1,color:"#555"}}>PEDIDO</div><div>Pedido #{p.numero}{p.fecha_entrega?(" · entrega "+p.fecha_entrega):""}</div>{p.etiqueta && <div>Etiqueta: {p.etiqueta}</div>}</div>
+          </div>
+          <table>
+            <thead><tr><th>Descripción</th><th style={{textAlign:"right"}}>Cant.</th><th style={{textAlign:"right"}}>Vr. unitario</th><th style={{textAlign:"right"}}>Subtotal</th></tr></thead>
+            <tbody>
+              <tr><td>Cera capilar {p.formula_nombre?("· "+p.formula_nombre):""} · {num(p.presentacion_g,0)} g{p.cliente_marca?(" · marca "+p.cliente_marca):""}</td><td style={{textAlign:"right"}}>{r.unidades}</td><td style={{textAlign:"right"}}>{fmt(r.precio_unidad)}</td><td style={{textAlign:"right"}}>{fmt(subtotal)}</td></tr>
+            </tbody>
+            <tfoot>
+              {Number(r.descuento)>0 && <tr className="tot"><td colSpan="3" style={{textAlign:"right"}}>Descuento</td><td style={{textAlign:"right"}}>− {fmt(r.descuento)}</td></tr>}
+              <tr className="tot"><td colSpan="3" style={{textAlign:"right",fontWeight:900,fontSize:16}}>TOTAL</td><td style={{textAlign:"right",fontWeight:900,fontSize:16}}>{fmt(r.total)}</td></tr>
+              <tr className="tot"><td colSpan="3" style={{textAlign:"right",color:"#555"}}>Abonos del pedido</td><td style={{textAlign:"right"}}>{fmt(p.pagado)}</td></tr>
+              <tr className="tot"><td colSpan="3" style={{textAlign:"right",color:"#555"}}>Saldo del pedido</td><td style={{textAlign:"right",fontWeight:800}}>{fmt(saldo)}</td></tr>
+            </tfoot>
+          </table>
+          {r.nota && <div style={{marginTop:12,fontSize:13}}><b>Nota:</b> {r.nota}</div>}
+          <div style={{display:"flex",gap:40,marginTop:46,fontSize:12}}>
+            <div style={{flex:1,borderTop:"1px solid #000",paddingTop:6}}>Entregó · YBRD</div>
+            <div style={{flex:1,borderTop:"1px solid #000",paddingTop:6}}>Recibió · {p.cliente_nombre}</div>
+          </div>
+          <div style={{marginTop:18,fontSize:10,color:"#777",textAlign:"center",letterSpacing:1}}>YBRD · POSICIÓNATE</div>
+        </div>
+        <div className="modal-actions" style={{padding:"0 4px 4px"}}>
+          <button className="btn btn-ghost" onClick={onClose}>Cerrar</button>
+          <button className="btn btn-amber" onClick={imprimir}>🖨 Imprimir / guardar PDF</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PagoModal({p, saldo, showToast, onClose, onDone}){
+  const [valor,setValor]=useState(String(Math.max(0,saldo)||""));
+  const [medio,setMedio]=useState("transferencia");
+  const [fecha,setFecha]=useState(hoyISO());
+  const [nota,setNota]=useState("");
+  const [busy,setBusy]=useState(false);
+  const confirmar=async()=>{ if(busy||!(Number(valor)>0)) return; setBusy(true);
+    try{ await db.addPago({pedido_id:p.id,valor,medio,fecha,nota}); showToast("Pago registrado ✓"); onDone(); }catch(e){ showToast(""+(e.message||e),"err"); } setBusy(false); };
+  return (
+    <div className="modal-bg" onClick={onClose} style={{zIndex:260}}>
+      <div className="modal" style={{maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-t">💰 Registrar pago · pedido #{p.numero}</div>
+        <div className="muted" style={{marginBottom:8}}>Saldo pendiente: <b style={{color:"var(--tb)"}}>{fmt(saldo)}</b></div>
+        <label className="label">Valor</label><input className="input" type="number" value={valor} onChange={e=>setValor(e.target.value)}/>
+        <label className="label">Medio</label>
+        <select className="select" value={medio} onChange={e=>setMedio(e.target.value)}><option value="transferencia">Transferencia</option><option value="efectivo">Efectivo</option><option value="otro">Otro</option></select>
+        <label className="label">Fecha</label><input className="input" type="date" value={fecha} onChange={e=>setFecha(e.target.value)}/>
+        <label className="label">Nota</label><input className="input" value={nota} onChange={e=>setNota(e.target.value)}/>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" disabled={busy||!(Number(valor)>0)} onClick={confirmar}>{busy?"Guardando…":"Guardar pago"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PRODUCCIÓN (historial de lotes con su consumo)
+// ============================================================
+function Produccion({showToast}){
+  const [rows,setRows]=useState(null);
+  const [clientes,setClientes]=useState([]);
+  const [abierto,setAbierto]=useState(null);
+  const [det,setDet]=useState({});
+  useEffect(()=>{ (async()=>{ try{ const [p,c]=await Promise.all([db.listProducciones(),db.listClientes()]); setRows(p); setClientes(c); }catch(e){ showToast(""+(e.message||e),"err"); setRows([]); } })(); },[]);
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const cli=id=>{ const c=clientes.find(x=>x.id===id); return c?(c.marca||c.nombre):"—"; };
+  const abrir=async(id)=>{ if(abierto===id){ setAbierto(null); return; } setAbierto(id); if(!det[id]){ const d=await db.produccionInsumos(id); setDet(x=>({...x,[id]:d})); } };
+  const totKg=rows.reduce((a,r)=>a+Number(r.kg),0), totCosto=rows.reduce((a,r)=>a+Number(r.costo_total),0);
+  return (
+    <div>
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}}>
+        <div className="card kpi"><div className="muted">Lotes</div><div className="v">{rows.length}</div></div>
+        <div className="card kpi"><div className="muted">Kilos producidos</div><div className="v" style={{color:"var(--amber)"}}>{num(totKg,1)}</div></div>
+        <div className="card kpi"><div className="muted">Costo en insumos</div><div className="v">{fmt(totCosto)}</div><div className="muted">{totKg>0?fmt(totCosto/totKg)+" por kilo":""}</div></div>
+      </div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Fecha</th><th>Pedido</th><th>Cliente</th><th className="num">Kg</th><th className="num">Costo</th><th className="num">$/kg</th><th>Nota</th></tr></thead>
+          <tbody>
+            {rows.length===0 && <tr><td colSpan="7"><div className="empty">Aún no hay lotes producidos.</div></td></tr>}
+            {rows.map(r=>(<React.Fragment key={r.id}>
+              <tr style={{cursor:"pointer"}} onClick={()=>abrir(r.id)}>
+                <td className="muted" style={{whiteSpace:"nowrap"}}>{fLocalDia(r.created_at)} {fLocalHora(r.created_at)}</td>
+                <td>#{(r.ybrd_pedidos||{}).numero}</td>
+                <td className="row-name">{cli((r.ybrd_pedidos||{}).cliente_id)}</td>
+                <td className="num">{num(r.kg,2)}</td>
+                <td className="num" style={{fontWeight:700}}>{fmt(r.costo_total)}</td>
+                <td className="num">{fmt(Number(r.kg)>0?Number(r.costo_total)/Number(r.kg):0)}</td>
+                <td className="muted">{r.nota||""} <span style={{color:"var(--amber)"}}>{abierto===r.id?"▲":"▼"}</span></td>
+              </tr>
+              {abierto===r.id && (<tr><td colSpan="7" style={{background:"var(--sf2)"}}>
+                {!det[r.id] ? <span className="muted">Cargando…</span> : det[r.id].length===0 ? <span className="muted">Sin detalle de insumos.</span> :
+                  <table className="tbl" style={{fontSize:13}}><tbody>{det[r.id].map(i=>(<tr key={i.id}><td>{i.insumo_nombre}</td><td className="num">{num(i.cantidad,2)}</td><td className="num">{fmt(i.costo)}</td></tr>))}</tbody></table>}
+              </td></tr>)}
+            </React.Fragment>))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COBROS
+// ============================================================
+function Cobros({showToast}){
+  const [pedidos,setPedidos]=useState(null);
+  const [pagos,setPagos]=useState([]);
+  const [clientes,setClientes]=useState([]);
+  useEffect(()=>{ (async()=>{ try{ const [p,g,c]=await Promise.all([db.listPedidos(),db.listPagos(),db.listClientes()]); setPedidos(p); setPagos(g); setClientes(c); }catch(e){ showToast(""+(e.message||e),"err"); setPedidos([]); } })(); },[]);
+  if(!pedidos) return <div className="empty">Cargando…</div>;
+  const cli=id=>{ const c=clientes.find(x=>x.id===id); return c?(c.marca||c.nombre):"—"; };
+  const deben=pedidos.filter(p=>p.estado!=='cancelado' && Number(p.total)-Number(p.pagado)>0.5).sort((a,b)=>(Number(b.total)-Number(b.pagado))-(Number(a.total)-Number(a.pagado)));
+  const totDeben=deben.reduce((a,p)=>a+Number(p.total)-Number(p.pagado),0);
+  const mes=hoyISO().slice(0,7);
+  const cobradoMes=pagos.filter(g=>String(g.fecha).startsWith(mes)).reduce((a,g)=>a+Number(g.valor),0);
+  return (
+    <div>
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}}>
+        <div className="card kpi"><div className="muted">Por cobrar</div><div className="v" style={{color:totDeben>0?"var(--red)":"var(--green)"}}>{fmt(totDeben)}</div><div className="muted">{deben.length} pedidos con saldo</div></div>
+        <div className="card kpi"><div className="muted">Cobrado este mes</div><div className="v" style={{color:"var(--green)"}}>{fmt(cobradoMes)}</div></div>
+      </div>
+      <div className="sec-title" style={{fontSize:14,margin:"4px 0 6px"}}>Pedidos con saldo</div>
+      <div className="card" style={{padding:0,overflowX:"auto",marginBottom:12}}>
+        <table className="tbl">
+          <thead><tr><th>#</th><th>Cliente</th><th>Estado</th><th className="num">Total</th><th className="num">Pagado</th><th className="num">Saldo</th></tr></thead>
+          <tbody>
+            {deben.length===0 && <tr><td colSpan="6"><div className="empty">Nadie debe. 🎉</div></td></tr>}
+            {deben.map(p=>(<tr key={p.id}><td className="muted">#{p.numero}</td><td className="row-name">{p.cliente_marca||p.cliente_nombre}</td><td><span className={"pill estado-"+p.estado}>{ESTADOS[p.estado]}</span></td><td className="num">{fmt(p.total)}</td><td className="num">{fmt(p.pagado)}</td><td className="num" style={{color:"var(--red)",fontWeight:800}}>{fmt(Number(p.total)-Number(p.pagado))}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+      <div className="sec-title" style={{fontSize:14,margin:"4px 0 6px"}}>Últimos pagos</div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Fecha</th><th>Pedido</th><th>Cliente</th><th>Medio</th><th className="num">Valor</th><th>Nota</th></tr></thead>
+          <tbody>
+            {pagos.length===0 && <tr><td colSpan="6"><div className="empty">Sin pagos registrados.</div></td></tr>}
+            {pagos.slice(0,100).map(g=>(<tr key={g.id}><td className="muted">{g.fecha}</td><td>#{(g.ybrd_pedidos||{}).numero}</td><td className="row-name">{cli((g.ybrd_pedidos||{}).cliente_id)}</td><td className="muted">{g.medio||"—"}</td><td className="num" style={{fontWeight:700}}>{fmt(g.valor)}</td><td className="muted">{g.nota||""}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// INSUMOS (solo consulta; las compras entran por el admin de Panzer)
+// ============================================================
+function Insumos({showToast}){
+  const [rows,setRows]=useState(null);
+  const [q,setQ]=useState("");
+  const [solo,setSolo]=useState('todos');
+  useEffect(()=>{ db.listInsumos().then(setRows).catch(e=>{ showToast(""+(e.message||e),"err"); setRows([]); }); },[]);
+  if(!rows) return <div className="empty">Cargando…</div>;
+  const vis=rows.filter(i=>(!q || i.nombre.toLowerCase().includes(q.toLowerCase())) && (solo==='todos' || (solo==='bajo'?Number(i.stock)<=Number(i.stock_minimo||0):i.tipo===solo)));
+  const bajos=rows.filter(i=>Number(i.stock)<=Number(i.stock_minimo||0)).length;
+  return (
+    <div>
+      <div className="card" style={{background:"var(--amber-d)",border:"1px solid rgba(212,165,58,.3)",marginBottom:12}}><span className="muted">Son los mismos insumos de Panzer. YBRD solo los consume; las compras se ingresan en el admin de Panzer.</span></div>
+      <div className="toolbar">
+        <input className="input" placeholder="Buscar insumo…" value={q} onChange={e=>setQ(e.target.value)}/>
+        <select className="select" value={solo} onChange={e=>setSolo(e.target.value)}><option value="todos">Todos</option><option value="quimico">Químicos</option><option value="empaque">Empaques</option><option value="bajo">Stock bajo ({bajos})</option></select>
+      </div>
+      <div className="card" style={{padding:0,overflowX:"auto"}}>
+        <table className="tbl">
+          <thead><tr><th>Insumo</th><th>Tipo</th><th className="num">Stock</th><th className="num">Mínimo</th><th className="num">Costo</th></tr></thead>
+          <tbody>{vis.map(i=>{ const bajo=Number(i.stock)<=Number(i.stock_minimo||0); return (
+            <tr key={i.id}><td className="row-name">{i.nombre}</td><td><span className={"pill "+(i.tipo==='empaque'?'pill-prod':'pill-token')}>{i.tipo}</span></td>
+            <td className="num" style={{color:bajo?"var(--red)":undefined,fontWeight:bajo?800:400}}>{num(i.stock,i.unidad==='g'?0:2)} {i.unidad}{bajo?" ⚠":""}</td>
+            <td className="num muted">{num(i.stock_minimo,0)}</td><td className="num">{fmt(i.costo)} <span className="muted">/ {i.unidad}</span></td></tr>); })}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
